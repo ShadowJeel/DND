@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 220 20% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+    --primary: 220 70% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 35 90% 52%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 15% 93%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 35 90% 52%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 87%;
+    --input: 220 13% 87%;
+    --ring: 220 70% 45%;
+    --chart-1: 220 70% 45%;
+    --chart-2: 35 90% 52%;
+    --chart-3: 160 50% 40%;
+    --chart-4: 0 72% 51%;
+    --chart-5: 280 50% 50%;
+    --radius: 0.5rem;
+    --sidebar-background: 220 25% 14%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 220 70% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 22%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 220 15% 25%;
+    --sidebar-ring: 220 70% 55%;
+    --success: 160 60% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 90% 52%;
+    --warning-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 220 25% 8%;
+    --foreground: 210 20% 95%;
+    --card: 220 20% 12%;
+    --card-foreground: 210 20% 95%;
+    --popover: 220 20% 10%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 220 70% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 35 90% 60%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 15% 18%;
+    --muted-foreground: 220 10% 65%;
+    --accent: 35 90% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 25%;
+    --input: 220 13% 25%;
+    --ring: 220 70% 55%;
+    --chart-1: 220 70% 55%;
+    --chart-2: 35 90% 60%;
+    --chart-3: 160 50% 50%;
+    --chart-4: 0 72% 60%;
+    --chart-5: 280 50% 60%;
+    --sidebar-background: 220 25% 10%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 220 70% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 18%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 220 15% 20%;
+    --sidebar-ring: 220 70% 55%;
+    --success: 160 60% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 35 90% 60%;
+    --warning-foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply text-foreground min-h-screen;
+    background: radial-gradient(ellipse at top, hsl(var(--primary)/0.03), bg-background, bg-background);
+    /* For standard Tailwind background */
+    @apply bg-background;
+    /* Then overriding with a pseudo-element for depth (or directly depending on browser support, direct radial is fine for now but let's just do a nice tailwind base) */
+    background-image: radial-gradient(circle at top center, hsl(var(--primary) / 0.05) 0%, transparent 70%), linear-gradient(to bottom, transparent, transparent);
+  }
+}

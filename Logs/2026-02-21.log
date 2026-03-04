@@ -1,0 +1,35 @@
+[2026-02-21T07:24:02.477Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-02-21T07:24:02.473Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"****8391","to":"+****8391"}
+[2026-02-21T07:24:05.917Z] INFO WhatsApp message sent via Meta {"messageId":"wamid.HBgMOTE5MDE2Mjc4MzkxFQIAERgSNDExNTVDMTA5QjIyQjEyRjNBAA=="}
+[2026-02-21T07:24:27.172Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"new_inquiy_alert"}
+[2026-02-21T07:24:27.171Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"****5427","to":"+****8391"}
+[2026-02-21T07:24:27.170Z] INFO New inquiry created {"inquiryId":"INQ-0007","sellerCount":4}
+[2026-02-21T07:24:27.173Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"****3216","to":"+****8391"}
+[2026-02-21T07:24:27.175Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"****3212","to":"+****8391"}
+[2026-02-21T07:24:27.175Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"new_inquiy_alert"}
+[2026-02-21T07:24:27.174Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"new_inquiy_alert"}
+[2026-02-21T07:24:27.177Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"****3456","to":"+****8391"}
+[2026-02-21T07:24:27.177Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"new_inquiy_alert"}
+[2026-02-21T07:24:28.227Z] ERROR Meta API error {"error":{"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (new_inquiy_alert) does not exist in en"},"fbtrace_id":"A6V_vAUgsrYOSu3C7ME-fVP"}}}
+[2026-02-21T07:24:28.237Z] ERROR Meta API error {"error":{"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (new_inquiy_alert) does not exist in en"},"fbtrace_id":"Az59vcid_6qNiok3ELTSp-g"}}}
+[2026-02-21T07:24:28.237Z] ERROR Meta API error {"error":{"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (new_inquiy_alert) does not exist in en"},"fbtrace_id":"A4b0JFce2M-VxUqzYnz7oxo"}}}
+[2026-02-21T07:24:28.244Z] ERROR Meta API error {"error":{"error":{"message":"(#132001) Template name does not exist in the translation","type":"OAuthException","code":132001,"error_data":{"messaging_product":"whatsapp","details":"template name (new_inquiy_alert) does not exist in en"},"fbtrace_id":"AJ3xHNSVKIlO4T_niUxKRML"}}}
+[2026-02-21T07:24:28.244Z] WARN Some inquiry notifications failed
+[2026-02-21T07:24:28.244Z] INFO New inquiry notifications complete {"successful":0,"failed":4}
+[2026-02-21T07:24:50.013Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"****5427","to":"+****8391"}
+[2026-02-21T07:24:50.014Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-02-21T07:24:51.509Z] INFO WhatsApp message sent via Meta {"messageId":"wamid.HBgMOTE5MDE2Mjc4MzkxFQIAERgSQUNENTU4OUY4RTVEMDg1MTU5AA=="}
+[2026-02-21T07:25:05.445Z] INFO New offer submitted {"inquiryId":"INQ-0007"}
+[2026-02-21T07:25:07.089Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"new_offer_alert"}
+[2026-02-21T07:25:07.088Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"****8391","to":"+****8391"}
+[2026-02-21T07:25:07.087Z] INFO Notifying buyer of new offer {"buyerId":"BUY-0001","buyerPhone":"****8391"}
+[2026-02-21T07:25:08.253Z] INFO New offer notification sent to buyer
+[2026-02-21T07:25:08.252Z] ERROR Meta API error {"error":{"error":{"message":"(#132000) Number of parameters does not match the expected number of params","type":"OAuthException","code":132000,"error_data":{"messaging_product":"whatsapp","details":"body: number of localizable_params (2) does not match the expected number of params (0)"},"fbtrace_id":"Atl7cdDkpICT7KK1GoisSSA"}}}
+[2026-02-21T07:25:55.422Z] INFO New offer submitted {"inquiryId":"INQ-0007"}
+[2026-02-21T07:25:55.866Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"****8391","to":"+****8391"}
+[2026-02-21T07:25:55.866Z] INFO Notifying buyer of new offer {"buyerId":"BUY-0001","buyerPhone":"****8391"}
+[2026-02-21T07:25:55.867Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"new_offer_alert"}
+[2026-02-21T07:25:57.004Z] ERROR Meta API error {"error":{"error":{"message":"(#132000) Number of parameters does not match the expected number of params","type":"OAuthException","code":132000,"error_data":{"messaging_product":"whatsapp","details":"body: number of localizable_params (2) does not match the expected number of params (0)"},"fbtrace_id":"AmOp3bfbIWhiSYYtQocLAKn"}}}
+[2026-02-21T07:25:57.005Z] INFO New offer notification sent to buyer
+[2026-02-21T08:40:28.216Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-02-21T08:40:34.332Z] ERROR Meta API error {"error":{"error":{"message":"(#10) Application does not have permission for this action","type":"OAuthException","code":10,"error_data":{"messaging_product":"whatsapp","details":"There was a problem with the access token or permissions you are using for the API call."},"fbtrace_id":"Aw1E31C7j3HIgwQpavUKKWh"}}}

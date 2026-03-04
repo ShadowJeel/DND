@@ -1,0 +1,4 @@
+[2026-03-02T16:19:46.816Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-02T16:19:47.128Z] ERROR Meta API error {"error":{"error":{"message":"Authentication Error","code":190,"type":"OAuthException","fbtrace_id":"A15rvji_d3EAvxPwHdOzM2m"}}}
+[2026-03-02T16:20:16.714Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-02T16:20:17.017Z] ERROR Meta API error {"error":{"error":{"message":"Authentication Error","code":190,"type":"OAuthException","fbtrace_id":"AwMH-c5lQxpBN7tr28zGyOp"}}}

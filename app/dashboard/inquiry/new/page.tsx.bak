@@ -1,0 +1,444 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { Plus, Trash2, ShoppingCart, Package, ArrowLeft } from "lucide-react"
+import { useAuth } from "@/lib/auth-context"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+
+
+
+
+
+interface CartItem {
+  product: string
+  paymentTerms: string
+  options: Record<string, string | string[]>
+}
+
+const emptyItem: CartItem = {
+  product: "",
+  paymentTerms: "",
+  options: {},
+}
+
+export default function NewInquiryPage() {
+  const { user } = useAuth()
+  const router = useRouter()
+  const [currentItem, setCurrentItem] = useState<CartItem>({ ...emptyItem })
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [submitting, setSubmitting] = useState(false)
+  const [dynamicProducts, setDynamicProducts] = useState<string[]>([])
+  const [productOptions, setProductOptions] = useState<any[]>([])
+  const [mounted, setMounted] = useState(false)
+  const [checkoutStep, setCheckoutStep] = useState<"cart" | "delivery" | "preview">("cart")
+
+  // Delivery details state
+  const [deliveryDetails, setDeliveryDetails] = useState({
+    deliveryAddress: "",
+    district: "",
+    state: "",
+    pinCode: "",
+  })
+
+  // Fetch admin products on mount
+  useEffect(() => {
+    setMounted(true)
+    const fetchDynamicProducts = async () => {
+      try {
+        const res = await fetch("/api/products")
+        if (res.ok) {
+          const data = await res.json()
+          setDynamicProducts(data.map((p: any) => p.name))
+        }
+      } catch (err) {
+        console.error("Failed to fetch products:", err)
+      }
+    }
+    fetchDynamicProducts()
+  }, [])
+
+  // Fetch product options when product changes
+  useEffect(() => {
+    if (currentItem.product) {
+      fetch(`/api/products/options?productName=${encodeURIComponent(currentItem.product)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setProductOptions(data)
+          } else {
+            setProductOptions([])
+          }
+        })
+        .catch(() => setProductOptions([]))
+    } else {
+      setProductOptions([])
+    }
+  }, [currentItem.product])
+
+  const updateField = (field: keyof CartItem, value: string | number) => {
+    setCurrentItem((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const updateOption = (optionName: string, value: string | string[]) => {
+    setCurrentItem(prev => ({
+      ...prev,
+      options: {
+        ...(prev.options || {}),
+        [optionName]: value
+      }
+    }))
+  }
+
+  const toggleCheckboxOption = (optionName: string, value: string) => {
+    setCurrentItem(prev => {
+      const currentOptions = prev.options?.[optionName] as string[] || [];
+      let newOptions;
+      if (currentOptions.includes(value)) {
+        newOptions = currentOptions.filter(v => v !== value);
+      } else {
+        newOptions = [...currentOptions, value];
+      }
+      return {
+        ...prev,
+        options: {
+          ...(prev.options || {}),
+          [optionName]: newOptions
+        }
+      }
+    })
+  }
+
+  const addToCart = () => {
+    if (!currentItem.product) {
+      toast.error("Please select a Product")
+      return
+    }
+
+    const itemToSave = { ...currentItem }
+
+    setCart((prev) => [...prev, itemToSave])
+    setCurrentItem({ ...emptyItem })
+    toast.success("Item added to inquiry cart")
+  }
+
+  const removeFromCart = (idx: number) => {
+    setCart((prev) => prev.filter((_, i) => i !== idx))
+  }
+
+  const handleProceedToDelivery = () => {
+    setCheckoutStep("delivery")
+  }
+
+  const handleProceedToPreview = () => {
+    if (!deliveryDetails.deliveryAddress || !deliveryDetails.district || !deliveryDetails.state || !deliveryDetails.pinCode) {
+      toast.error("Please fill in all delivery address details")
+      return
+    }
+    setCheckoutStep("preview")
+  }
+
+  const submitInquiry = async () => {
+    if (cart.length === 0) {
+      toast.error("Add at least one item to submit")
+      return
+    }
+
+    if (!deliveryDetails.deliveryAddress || !deliveryDetails.district || !deliveryDetails.state || !deliveryDetails.pinCode) {
+      toast.error("Please fill in all delivery address details")
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const res = await fetch("/api/inquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          buyerId: user?.id,
+          buyerName: user?.name,
+          items: cart,
+          deliveryDetails
+        }),
+      })
+      if (!res.ok) throw new Error()
+      toast.success("Inquiry submitted successfully!")
+      router.push("/dashboard/inquiries")
+    } catch {
+      toast.error("Failed to submit inquiry")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="mx-auto max-w-5xl">
+      <div className="mb-8">
+        <h2 className="font-serif text-2xl font-bold text-foreground">Create New Inquiry</h2>
+        <p className="mt-1 text-muted-foreground">
+          Add products with technical specifications, then submit your inquiry to receive quotes from verified sellers.
+        </p>
+      </div>
+
+      <div className="grid gap-6">
+        {/* Product Form */}
+        <div>
+          <Card className="border-border">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-serif text-foreground">
+                <Package className="h-5 w-5 text-primary" />
+                Product Specifications
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-6">
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label className="text-foreground">Select Product <span className="text-red-500 ml-1">*</span></Label>
+                  <Select value={currentItem.product} onValueChange={(v) => updateField("product", v)}>
+                    <SelectTrigger className="mt-1.5"><SelectValue placeholder="Select product" /></SelectTrigger>
+                    <SelectContent>
+                      {dynamicProducts.map((p) => (
+                        <SelectItem key={p} value={p}>{p}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Dynamic Product Options */}
+              {productOptions.length > 0 ? (
+                <div className="flex flex-col gap-5 border-t border-b border-border py-6">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Product Options</h3>
+                  {productOptions.map((opt) => {
+                    const optionKey = (() => {
+                      const hasDuplicates = productOptions.filter(o => o.option_name === opt.option_name).length > 1;
+                      return hasDuplicates ? `${opt.option_name} (${opt.option_type})` : opt.option_name;
+                    })();
+
+                    return (
+                      <div key={opt.id}>
+                        <Label className="text-foreground mb-2 block">{opt.option_name} <span className="text-red-500 ml-1">*</span></Label>
+
+                        {opt.option_type === 'dropdown' ? (
+                          <Select value={(currentItem.options?.[optionKey] as string) || ""} onValueChange={(v) => updateOption(optionKey, v)}>
+                            <SelectTrigger><SelectValue placeholder={`Select ${opt.option_name.toLowerCase()}`} /></SelectTrigger>
+                            <SelectContent>
+                              {(opt.dropdown_values || []).map((val: string, idx: number) => (
+                                <SelectItem key={idx} value={val}>{val}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : opt.option_type === 'checkbox' ? (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full rounded-md border border-input bg-background p-4 min-h-[40px]">
+                            {(opt.dropdown_values || []).length > 0 ? (
+                              (opt.dropdown_values || []).map((val: string, idx: number) => (
+                                <label key={idx} className="flex items-start gap-2 text-sm leading-tight cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={((currentItem.options?.[optionKey] as string[]) || []).includes(val)}
+                                    onChange={() => toggleCheckboxOption(optionKey, val)}
+                                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
+                                  />
+                                  <span>{val}</span>
+                                </label>
+                              ))
+                            ) : (
+                              <span className="text-sm text-muted-foreground italic col-span-full">No choices configured</span>
+                            )}
+                          </div>
+                        ) : (
+                          <Input
+                            type={opt.option_type === 'number' ? 'number' : 'text'}
+                            min={opt.option_type === 'number' ? "0" : undefined}
+                            placeholder={`Enter ${opt.option_name.toLowerCase()}`}
+                            value={(currentItem.options?.[optionKey] as string) || ""}
+                            onChange={(e) => updateOption(optionKey, e.target.value)}
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : null}
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label className="text-foreground">Payment Term (in Days)</Label>
+                  <Input
+                    type="number"
+                    placeholder="e.g. 15"
+                    value={currentItem.paymentTerms || ""}
+                    onChange={(e) => updateField("paymentTerms", e.target.value)}
+                    className="mt-1.5"
+                    min="0"
+                  />
+                </div>
+              </div>
+
+              <Button onClick={addToCart} className="gap-2 w-full sm:w-auto">
+                <Plus className="h-4 w-4" /> Add to Inquiry Cart
+              </Button>
+            </CardContent>
+          </Card>
+
+
+
+        </div>
+      </div>
+
+      {mounted && document.getElementById('header-actions') && createPortal(
+        <Sheet onOpenChange={(open) => { if (!open) setCheckoutStep("cart") }}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="relative h-9 w-9 rounded-full bg-background border-border">
+              <ShoppingCart className="h-4 w-4" />
+              {cart.length > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-5 min-w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
+                  {cart.length}
+                </Badge>
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="w-[400px] sm:w-[540px] overflow-hidden border-l border-border flex flex-col p-0">
+            <SheetHeader className="shrink-0 p-6 pb-2">
+              <div className="flex items-center gap-2">
+                {checkoutStep !== "cart" && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2" onClick={() => setCheckoutStep(checkoutStep === "preview" ? "delivery" : "cart")}>
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                )}
+                <SheetTitle className="flex items-center gap-2 font-serif m-0">
+                  {checkoutStep === "cart" && <><ShoppingCart className="h-5 w-5 text-primary" /> Inquiry Cart</>}
+                  {checkoutStep === "delivery" && "Delivery Details"}
+                  {checkoutStep === "preview" && "Preview Inquiry"}
+                  {checkoutStep === "cart" && <Badge variant="secondary" className="ml-auto">{cart.length}</Badge>}
+                </SheetTitle>
+              </div>
+            </SheetHeader>
+
+            <div className="flex-1 overflow-y-auto p-6 pt-4">
+              {cart.length === 0 ? (
+                <p className="py-8 text-center text-sm text-muted-foreground">
+                  No items added yet. Fill in the product details and click "Add to Inquiry Cart".
+                </p>
+              ) : (
+                <div className="flex flex-col gap-4 pb-8">
+                  {checkoutStep === "cart" && (
+                    <>
+                      {cart.map((item, idx) => (
+                        <div key={idx} className="rounded-lg border border-border bg-muted/30 p-3">
+                          <div className="mb-2 flex items-start justify-between">
+                            <span className="text-sm font-semibold text-foreground">{item.product}</span>
+                            <button onClick={() => removeFromCart(idx)} className="text-destructive hover:text-destructive/80" aria-label="Remove item">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1 text-xs text-muted-foreground mb-1" />
+
+                          {/* Show dynamic options summary */}
+                          {Object.entries(item.options || {}).map(([k, v]) => {
+                            const valStr = Array.isArray(v) ? v.join(", ") : v;
+                            if (!valStr) return null;
+                            return (
+                              <div key={k} className="text-[10px] text-muted-foreground leading-tight">
+                                <span className="font-medium">{k}:</span> {valStr}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ))}
+
+                      <Button onClick={handleProceedToDelivery} className="mt-4 w-full h-11">
+                        Checkout
+                      </Button>
+                    </>
+                  )}
+
+                  {checkoutStep === "delivery" && (
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <Label className="text-foreground">Delivery Address <span className="text-red-500 ml-1">*</span></Label>
+                        <Textarea
+                          placeholder="Enter complete delivery address..."
+                          value={deliveryDetails.deliveryAddress}
+                          onChange={(e) => setDeliveryDetails(prev => ({ ...prev, deliveryAddress: e.target.value }))}
+                          className="mt-1.5"
+                          rows={3}
+                        />
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <Label className="text-foreground">District <span className="text-red-500 ml-1">*</span></Label>
+                          <Input placeholder="Enter district" value={deliveryDetails.district} onChange={(e) => setDeliveryDetails(prev => ({ ...prev, district: e.target.value }))} className="mt-1.5" />
+                        </div>
+                        <div>
+                          <Label className="text-foreground">State <span className="text-red-500 ml-1">*</span></Label>
+                          <Input placeholder="Enter state" value={deliveryDetails.state} onChange={(e) => setDeliveryDetails(prev => ({ ...prev, state: e.target.value }))} className="mt-1.5" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <Label className="text-foreground">Pin Code <span className="text-red-500 ml-1">*</span></Label>
+                          <Input placeholder="Enter pin code" type="number" min="0" value={deliveryDetails.pinCode} onChange={(e) => setDeliveryDetails(prev => ({ ...prev, pinCode: e.target.value }))} className="mt-1.5" />
+                        </div>
+                      </div>
+                      <Button onClick={handleProceedToPreview} className="mt-4 w-full h-11">
+                        Proceed to Review
+                      </Button>
+                    </div>
+                  )}
+
+                  {checkoutStep === "preview" && (
+                    <div className="flex flex-col gap-6">
+                      <div>
+                        <h4 className="text-sm font-semibold mb-3 border-b-2 border-border pb-2">Products ({cart.length})</h4>
+                        <div className="flex flex-col gap-2">
+                          {cart.map((item, idx) => (
+                            <div key={idx} className="rounded-lg border border-border bg-card p-3 text-sm">
+                              <div className="font-medium">{item.product}</div>
+                              <div className="text-xs text-muted-foreground mt-1 flex flex-col gap-0.5">
+                                {Object.entries(item.options || {}).map(([k, v]) => {
+                                  const valStr = Array.isArray(v) ? v.join(", ") : v;
+                                  if (!valStr) return null;
+                                  return (
+                                    <span key={k}><strong className="font-medium">{k}:</strong> {valStr}</span>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="text-sm font-semibold mb-3 border-b-2 border-border pb-2">Delivery Details</h4>
+                        <div className="rounded-lg border border-border bg-card p-3 text-sm flex flex-col gap-1">
+                          <p className="mb-0.5">{deliveryDetails.deliveryAddress}</p>
+                          <p className="text-muted-foreground">{deliveryDetails.district}, {deliveryDetails.state}</p>
+                          <p className="text-muted-foreground">PIN: {deliveryDetails.pinCode}</p>
+                        </div>
+                      </div>
+
+                      <Button onClick={submitInquiry} disabled={submitting} className="mt-2 w-full h-11">
+                        {submitting ? "Submitting..." : "Submit Inquiry"}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>,
+        document.getElementById('header-actions')!
+      )}
+    </div>
+  )
+}

@@ -1,0 +1,38 @@
+[2026-03-01T04:10:40.458Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-01T04:10:40.933Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Saturday, 28-Feb-26 20:10:40 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"AwwCg9XF68E6ary6MotqLfm"}}}
+[2026-03-01T13:10:50.698Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-01T13:10:51.025Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 05:10:50 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"ASzzrGMFcOsZoVh2AvjOBpg"}}}
+[2026-03-01T15:39:59.568Z] INFO Sending Meta WhatsApp message {"to":"****5427","template":"hello_world"}
+[2026-03-01T15:39:59.909Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 07:39:59 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"AYsNuLAt37I08tJhSGejldw"}}}
+[2026-03-01T15:47:25.563Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-01T15:47:26.002Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 07:47:25 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"A30njZaCrORU2ZBRyKPwI1Z"}}}
+[2026-03-01T15:48:21.683Z] INFO New inquiry created {"inquiryId":"INQ-0006","sellerCount":4}
+[2026-03-01T15:48:21.715Z] INFO Sending Meta WhatsApp message {"to":"****3216","template":"bidding_started"}
+[2026-03-01T15:48:21.714Z] INFO Sending Meta WhatsApp message {"to":"****5427","template":"bidding_started"}
+[2026-03-01T15:48:21.715Z] INFO Sending Meta WhatsApp message {"to":"****3212","template":"bidding_started"}
+[2026-03-01T15:48:21.717Z] INFO Sending Meta WhatsApp message {"to":"****3456","template":"bidding_started"}
+[2026-03-01T15:48:22.118Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 07:48:22 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"An4n2vSFaKkXlEG20hF6KVL"}}}
+[2026-03-01T15:48:22.157Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 07:48:22 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"A6U0FzeHsOhc7_VnJuCjYYp"}}}
+[2026-03-01T15:48:22.159Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 07:48:22 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"AUX005MeHRQusseOgc5x1I8"}}}
+[2026-03-01T15:48:22.160Z] ERROR Meta API error {"error":{"error":{"message":"Authentication Error","code":190,"type":"OAuthException","fbtrace_id":"AsdFAZ_gGN71d5ExTGDGsT6"}}}
+[2026-03-01T15:48:22.161Z] INFO New inquiry notifications complete {"successful":0,"failed":0}
+[2026-03-01T15:48:57.376Z] INFO Sending Meta WhatsApp message {"to":"****5427","template":"hello_world"}
+[2026-03-01T15:48:57.789Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 07:48:57 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"A0ibc9i3WEUXqxeMuM1Rbjc"}}}
+[2026-03-01T16:28:56.045Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-01T16:28:56.361Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 08:28:56 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"ABEP9Kvzg9kuPkGMGMw54Sj"}}}
+[2026-03-01T16:29:10.304Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-01T16:29:10.606Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 08:29:10 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"AARHbOjIGsFR7m-IJT38s3n"}}}
+[2026-03-01T16:29:55.511Z] ERROR Error creating inquiry {"error":"Could not find the 'delivery_terms' column of 'inquiry_items' in the schema cache"}
+[2026-03-01T16:30:04.387Z] ERROR Error creating inquiry {"error":"Could not find the 'delivery_terms' column of 'inquiry_items' in the schema cache"}
+[2026-03-01T16:33:19.557Z] WARN No verified sellers found for inquiry notification
+[2026-03-01T16:33:19.554Z] INFO New inquiry created {"inquiryId":"INQ-0003","sellerCount":0}
+[2026-03-01T16:40:05.877Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-01T16:40:06.196Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 08:40:06 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"Ar-hH1Mn57PV7ytXJ8TPZQq"}}}
+[2026-03-01T16:40:20.175Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-01T16:40:20.449Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 08:40:20 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"AtFTbnaZstj1t3GTJ4FfaQB"}}}
+[2026-03-01T16:41:09.645Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-01T16:41:09.989Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 08:41:09 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"A1zWBjE_kgwd4Z0vO5ZWees"}}}
+[2026-03-01T17:26:25.617Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-01T17:26:25.911Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Sunday, 01-Mar-26 09:26:25 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"AXbRqdnlZ91fOzte-4SU_2C"}}}
+[2026-03-01T17:29:00.615Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-01T17:29:01.294Z] ERROR Meta API error {"error":{"error":{"message":"Authentication Error","code":190,"type":"OAuthException","fbtrace_id":"ACDUlGTXbqmNvqB1o-nX_f2"}}}

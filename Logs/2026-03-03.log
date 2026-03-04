@@ -1,0 +1,50 @@
+[2026-03-03T08:04:50.117Z] ERROR Error fetching offers {"error":"Missing or insufficient permissions."}
+[2026-03-03T08:04:50.131Z] ERROR Error fetching inquiries {"error":"Missing or insufficient permissions."}
+[2026-03-03T08:15:49.393Z] ERROR File upload error {"error":"Firebase Storage: User does not have permission to access 'documents/user_****8092.png'. (storage/unauthorized)"}
+[2026-03-03T08:40:41.097Z] ERROR File upload error {"error":"Firebase Storage: User does not have permission to access 'documents/user_****9567.png'. (storage/unauthorized)"}
+[2026-03-03T08:41:04.866Z] ERROR File upload error {"error":"Firebase Storage: User does not have permission to access 'documents/user_****3361.png'. (storage/unauthorized)"}
+[2026-03-03T08:45:57.862Z] ERROR File upload error {"error":"Firebase Storage: User does not have permission to access 'documents/user_****6297.png'. (storage/unauthorized)"}
+[2026-03-03T09:07:41.620Z] ERROR Registration error {"error":"Missing or insufficient permissions."}
+[2026-03-03T09:07:47.766Z] ERROR Registration error {"error":"Missing or insufficient permissions."}
+[2026-03-03T09:21:38.017Z] ERROR Login error {"error":"Missing or insufficient permissions."}
+[2026-03-03T09:21:53.557Z] ERROR Login error {"error":"Missing or insufficient permissions."}
+[2026-03-03T09:22:02.449Z] ERROR Login error {"error":"Missing or insufficient permissions."}
+[2026-03-03T09:31:42.658Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-03T09:31:43.078Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Tuesday, 03-Mar-26 01:31:42 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"AcL317oIx1EEgXqyUZV1cRO"}}}
+[2026-03-03T17:04:13.499Z] INFO New inquiry created client-side, sending notifications {"inquiryId":"INQ-0001","sellerCount":0}
+[2026-03-03T17:04:13.499Z] WARN No verified sellers found for inquiry notification
+[2026-03-03T17:08:24.721Z] ERROR Analytics error {"error":"7 PERMISSION_DENIED: Missing or insufficient permissions."}
+[2026-03-03T17:08:24.720Z] ERROR Analytics error {"error":"7 PERMISSION_DENIED: Missing or insufficient permissions."}
+[2026-03-03T17:08:24.730Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T17:08:24.734Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T17:08:24.779Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T17:08:24.790Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T17:08:48.944Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-03T17:08:49.413Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Tuesday, 03-Mar-26 09:08:49 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"AKW79SsrVReRlpho06ejli3"}}}
+[2026-03-03T18:08:38.080Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-03T18:08:38.368Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Tuesday, 03-Mar-26 10:08:38 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"Akz1rfkp7bnp0jsp2YSoP2v"}}}
+[2026-03-03T18:08:41.754Z] ERROR Analytics error {"error":"7 PERMISSION_DENIED: Missing or insufficient permissions."}
+[2026-03-03T18:08:41.768Z] ERROR Analytics error {"error":"7 PERMISSION_DENIED: Missing or insufficient permissions."}
+[2026-03-03T18:08:41.791Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T18:08:41.794Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T18:08:41.843Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T18:08:41.851Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T18:09:24.562Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-03T18:09:24.835Z] ERROR Meta API error {"error":{"error":{"message":"Authentication Error","code":190,"type":"OAuthException","fbtrace_id":"AZVq7wrU6xEzF2Dgeqn2Mca"}}}
+[2026-03-03T18:12:31.028Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-03T18:12:31.300Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Tuesday, 03-Mar-26 10:12:31 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"A8O5ahULh4UPUPDGoIyAmlt"}}}
+[2026-03-03T18:13:02.644Z] INFO New offer submitted {"inquiryId":"INQ-0001"}
+[2026-03-03T18:13:02.696Z] ERROR Failed to send WhatsApp notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-03-03T18:14:43.577Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-03T18:14:43.845Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Tuesday, 03-Mar-26 10:14:43 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"ApvlT7fotEGZIp6Z_h_tgY_"}}}
+[2026-03-03T18:50:35.146Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-03T18:50:35.423Z] ERROR Meta API error {"error":{"error":{"message":"Authentication Error","code":190,"type":"OAuthException","fbtrace_id":"AG4MKfwA22VnD-zZC1YsYqH"}}}
+[2026-03-03T18:56:58.267Z] INFO New offer submitted {"inquiryId":"INQ-0001"}
+[2026-03-03T18:56:58.385Z] ERROR Failed to send WhatsApp notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-03-03T18:58:20.894Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T18:58:20.902Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T18:58:20.919Z] ERROR Analytics error {"error":"7 PERMISSION_DENIED: Missing or insufficient permissions."}
+[2026-03-03T18:58:20.921Z] ERROR Analytics error {"error":"7 PERMISSION_DENIED: Missing or insufficient permissions."}
+[2026-03-03T18:58:20.935Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T18:58:20.949Z] ERROR Analytics error {"error":"Missing or insufficient permissions."}
+[2026-03-03T18:58:25.845Z] ERROR Analytics error {"error":"7 PERMISSION_DENIED: Missing or insufficient permissions."}

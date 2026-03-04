@@ -1,0 +1,131 @@
+
+> my-project@0.1.0 db:seed D:\CODES\freelance\DND Purchase
+> tsx lib/seed.ts
+
+PRAGMA foreign_keys = ON
+-- Buyers table
+    CREATE TABLE IF NOT EXISTS buyers (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      phone TEXT NOT NULL,
+      password TEXT NOT NULL,
+      company TEXT,
+      entity_type TEXT NOT NULL CHECK (entity_type IN ('company', 'individual')),
+      aadhaar_number TEXT,
+      verified INTEGER DEFAULT 1,
+      created_at TEXT NOT NULL
+    );
+-- Sellers table
+    CREATE TABLE IF NOT EXISTS sellers (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT UNIQUE NOT NULL,
+      phone TEXT NOT NULL,
+      password TEXT NOT NULL,
+      company TEXT NOT NULL,
+      entity_type TEXT NOT NULL CHECK (entity_type IN ('company', 'individual')),
+      gstin TEXT NOT NULL,
+      gst_certificate_name TEXT,
+      verified INTEGER DEFAULT 1,
+      created_at TEXT NOT NULL
+    );
+-- Inquiries table
+    CREATE TABLE IF NOT EXISTS inquiries (
+      id TEXT PRIMARY KEY,
+      buyer_id TEXT NOT NULL,
+      buyer_name TEXT NOT NULL,
+      status TEXT NOT NULL CHECK (status IN ('open', 'bidding', 'closed')),
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (buyer_id) REFERENCES buyers(id)
+    );
+-- Inquiry items table
+    CREATE TABLE IF NOT EXISTS inquiry_items (
+      id TEXT PRIMARY KEY,
+      inquiry_id TEXT NOT NULL,
+      product TEXT NOT NULL,
+      thickness TEXT,
+      width TEXT,
+      length TEXT,
+      grade TEXT NOT NULL,
+      quantity INTEGER NOT NULL,
+      delivery_terms TEXT NOT NULL,
+      payment_terms TEXT NOT NULL,
+      comments TEXT,
+      FOREIGN KEY (inquiry_id) REFERENCES inquiries(id) ON DELETE CASCADE
+    );
+-- Offers table
+    CREATE TABLE IF NOT EXISTS offers (
+      id TEXT PRIMARY KEY,
+      inquiry_id TEXT NOT NULL,
+      inquiry_item_id TEXT NOT NULL,
+      seller_id TEXT NOT NULL,
+      seller_name TEXT NOT NULL,
+      price_per_ton REAL NOT NULL,
+      comments TEXT,
+      pdf_url TEXT,
+      contact_email TEXT,
+      contact_phone TEXT,
+      status TEXT NOT NULL CHECK (status IN ('pending', 'accepted', 'rejected', 'disqualified')),
+      rank INTEGER,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (inquiry_id) REFERENCES inquiries(id) ON DELETE CASCADE,
+      FOREIGN KEY (inquiry_item_id) REFERENCES inquiry_items(id) ON DELETE CASCADE,
+      FOREIGN KEY (seller_id) REFERENCES sellers(id)
+    );
+-- Indexes for better query performance
+    CREATE INDEX IF NOT EXISTS idx_buyers_email ON buyers(email);
+CREATE INDEX IF NOT EXISTS idx_sellers_email ON sellers(email);
+CREATE INDEX IF NOT EXISTS idx_inquiries_buyer_id ON inquiries(buyer_id);
+CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status);
+CREATE INDEX IF NOT EXISTS idx_inquiry_items_inquiry_id ON inquiry_items(inquiry_id);
+CREATE INDEX IF NOT EXISTS idx_offers_inquiry_id ON offers(inquiry_id);
+CREATE INDEX IF NOT EXISTS idx_offers_seller_id ON offers(seller_id);
+CREATE INDEX IF NOT EXISTS idx_offers_inquiry_item_id ON offers(inquiry_item_id);
+Database initialized successfully at: D:\CODES\freelance\DND Purchase\data\dnd-purchase.db
+DELETE FROM offers;
+DELETE FROM inquiry_items;
+DELETE FROM inquiries;
+DELETE FROM buyers;
+DELETE FROM sellers;
+Database cleared
+Seeding database with demo data...
+
+    INSERT INTO buyers (id, name, email, phone, password, company, entity_type, aadhaar_number, verified, created_at)
+    VALUES ('BUY-0001', 'Tata Projects', 'buyer@tata.com', '9876543210', 'password', 'Tata Projects Ltd', 'company', NULL, 1.0, '2026-02-12T11:29:44.366Z')
+  
+
+    INSERT INTO buyers (id, name, email, phone, password, company, entity_type, aadhaar_number, verified, created_at)
+    VALUES ('BUY-0002', 'L&T Construction', 'buyer@lnt.com', '9876543211', 'password', 'L&T Construction', 'company', NULL, 1.0, '2026-02-12T11:29:44.367Z')
+  
+Inserted 2 buyers
+
+    INSERT INTO sellers (id, name, email, phone, password, company, entity_type, gstin, verified, created_at)
+    VALUES ('SEL-0001', 'Demo Seller', 'seller@demo.com', '9876543212', 'password', 'Demo Steel Traders', 'company', '27AABCU9603R1ZN', 1.0, '2026-02-12T11:29:44.373Z')
+  
+Inserted 1 sellers
+
+    INSERT INTO inquiries (id, buyer_id, buyer_name, status, created_at)
+    VALUES ('INQ-0001', 'BUY-0001', 'Tata Projects', 'open', '2026-02-10T11:29:44.376Z')
+  
+
+D:\CODES\freelance\DND Purchase\lib\seed.ts:152
+    insertInquiry.run(inq.id, inq.buyerId, inq.buyerName, inq.status, inq.createdAt)
+                  ^
+
+SqliteError: FOREIGN KEY constraint failed
+    at <anonymous> (D:\CODES\freelance\DND Purchase\lib\seed.ts:152:19)
+    at Array.forEach (<anonymous>)
+    at seedDatabase (D:\CODES\freelance\DND Purchase\lib\seed.ts:151:13)
+    at <anonymous> (D:\CODES\freelance\DND Purchase\lib\seed.ts:402:3)
+    at Object.<anonymous> (D:\CODES\freelance\DND Purchase\lib\seed.ts:404:1)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+    at Object.transformer (D:\CODES\freelance\DND Purchase\node_modules\.pnpm\tsx@4.21.0\node_modules\tsx\dist\register-D46fvsV_.cjs:3:1104)
+    at Module.load (node:internal/modules/cjs/loader:1208:32)
+    at Module._load (node:internal/modules/cjs/loader:1024:12)
+    at cjsLoader (node:internal/modules/esm/translators:348:17) {
+  code: 'SQLITE_CONSTRAINT_FOREIGNKEY'
+}
+
+Node.js v20.15.1
+ ELIFECYCLE  Command failed with exit code 1.

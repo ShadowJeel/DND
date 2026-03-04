@@ -1,0 +1,11 @@
+[2026-02-26T05:02:07.590Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-02-26T05:02:09.144Z] ERROR Meta API error {"error":{"error":{"message":"Authentication Error","code":190,"type":"OAuthException","fbtrace_id":"A4Tqb8ej7r8MytW7gT6ENi3"}}}
+[2026-02-26T05:37:08.523Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-02-26T05:37:08.520Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"****8391","to":"+****8391"}
+[2026-02-26T05:37:09.604Z] ERROR Meta API error {"error":{"error":{"message":"Authentication Error","code":190,"type":"OAuthException","fbtrace_id":"A8LEuxzsV5VGKNdwCCd_ao4"}}}
+[2026-02-26T05:55:26.704Z] ERROR Error fetching products {"error":"TypeError: fetch failed"}
+[2026-02-26T05:55:26.700Z] ERROR Error fetching products {"error":"TypeError: fetch failed"}
+[2026-02-26T07:05:48.138Z] ERROR Error fetching products {"error":"TypeError: fetch failed"}
+[2026-02-26T07:05:52.132Z] ERROR Error fetching products {"error":"TypeError: fetch failed"}
+[2026-02-26T07:05:55.133Z] ERROR Error fetching products {"error":"TypeError: fetch failed"}
+[2026-02-26T07:05:55.137Z] ERROR Error fetching products {"error":"TypeError: fetch failed"}

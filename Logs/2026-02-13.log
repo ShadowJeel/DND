@@ -1,0 +1,57 @@
+[2026-02-13T16:28:52.733Z] INFO Sending WhatsApp message {"to":"+****1006","length":208}
+[2026-02-13T16:28:52.733Z] INFO Twilio client initialized
+[2026-02-13T16:28:52.732Z] INFO Sending WhatsApp test message
+[2026-02-13T16:28:53.167Z] INFO WhatsApp message sent {"to":"+****1006","testMode":false}
+[2026-02-13T16:29:31.564Z] INFO Sending WhatsApp test message
+[2026-02-13T16:29:31.565Z] INFO Twilio client initialized
+[2026-02-13T16:29:31.565Z] INFO Sending WhatsApp message {"to":"+****8391","length":208}
+[2026-02-13T16:29:31.942Z] INFO WhatsApp message sent {"to":"+****8391","testMode":false}
+[2026-02-13T16:31:43.319Z] INFO Twilio client initialized
+[2026-02-13T16:31:43.318Z] INFO Sending WhatsApp test message
+[2026-02-13T16:31:43.319Z] INFO Sending WhatsApp message {"to":"+****8391","length":253}
+[2026-02-13T16:31:43.319Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"+****8391","to":"+****8391"}
+[2026-02-13T16:31:43.712Z] INFO WhatsApp message sent {"to":"+****8391","testMode":true}
+[2026-02-13T16:34:16.688Z] INFO Sending WhatsApp test message
+[2026-02-13T16:34:16.689Z] INFO Sending WhatsApp message {"to":"+****8391","length":253}
+[2026-02-13T16:34:16.689Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"+****8391","to":"+****8391"}
+[2026-02-13T16:34:17.128Z] INFO WhatsApp message sent {"to":"+****8391","testMode":true}
+[2026-02-13T17:25:35.971Z] INFO Twilio client initialized
+[2026-02-13T17:25:35.970Z] INFO Sending new inquiry notification to seller {"to":"+91 9016278391"}
+[2026-02-13T17:25:35.972Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"+91 9016278391","to":"+****8391"}
+[2026-02-13T17:25:35.966Z] INFO New inquiry created {"inquiryId":"INQ-0001","sellerCount":1}
+[2026-02-13T17:25:35.973Z] INFO Sending WhatsApp message {"to":"+****8391","length":314}
+[2026-02-13T17:25:36.475Z] INFO WhatsApp message sent {"to":"+****8391","testMode":true}
+[2026-02-13T17:25:36.476Z] INFO New inquiry notification sent to seller
+[2026-02-13T17:25:36.476Z] INFO New inquiry notifications complete {"successful":1,"failed":0}
+[2026-02-13T17:28:41.917Z] INFO New offer submitted {"inquiryId":"INQ-0001"}
+[2026-02-13T17:28:42.207Z] INFO Sending new offer notification to buyer {"to":"+91 9016278391"}
+[2026-02-13T17:28:42.220Z] INFO Sending WhatsApp message {"to":"+****8391","length":439}
+[2026-02-13T17:28:42.206Z] INFO Notifying buyer of new offer {"buyerId":"BUY-0001","buyerPhone":"+91 9016278391"}
+[2026-02-13T17:28:42.220Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"+91 9016278391","to":"+****8391"}
+[2026-02-13T17:28:42.595Z] INFO New offer notification sent to buyer
+[2026-02-13T17:28:42.596Z] INFO New offer notification sent to buyer
+[2026-02-13T17:28:42.594Z] INFO WhatsApp message sent {"to":"+****8391","testMode":true}
+[2026-02-13T19:24:19.266Z] INFO Sending bidding notifications {"sellerCount":1,"sellerPhones":["+91 9016278391"]}
+[2026-02-13T19:24:19.286Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"+91 9016278391","to":"+****8391"}
+[2026-02-13T19:24:19.286Z] INFO Sending WhatsApp message {"to":"+****8391","length":350}
+[2026-02-13T19:24:19.263Z] INFO Bidding activated {"inquiryId":"INQ-0001","sellerCount":1}
+[2026-02-13T19:24:19.286Z] INFO Twilio client initialized
+[2026-02-13T19:24:19.802Z] INFO WhatsApp message sent {"to":"+****8391","testMode":true}
+[2026-02-13T19:24:19.802Z] INFO Bidding notifications complete {"successful":1,"failed":0}
+[2026-02-13T19:24:19.803Z] INFO Bidding notifications sent
+[2026-02-13T19:24:58.537Z] INFO Accepting offer {"offerId":"OFR-0001"}
+[2026-02-13T19:24:59.147Z] INFO Offer accepted {"inquiryId":"INQ-0001"}
+[2026-02-13T19:24:59.148Z] INFO Notifying seller with buyer contact {"sellerId":"SEL-0001","sellerPhone":"+91 9016278391","buyerPhone":"+91 9016278391"}
+[2026-02-13T19:24:59.151Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"+91 9016278391","to":"+****8391"}
+[2026-02-13T19:24:59.149Z] INFO Sending acceptance notification to seller {"to":"+91 9016278391"}
+[2026-02-13T19:24:59.151Z] INFO Sending WhatsApp message {"to":"+****8391","length":398}
+[2026-02-13T19:24:59.532Z] INFO Acceptance notification sent to seller
+[2026-02-13T19:24:59.533Z] INFO Sending acceptance confirmation to buyer {"to":"+91 9016278391"}
+[2026-02-13T19:24:59.532Z] INFO Notifying buyer with seller contact {"buyerId":"BUY-0001","buyerPhone":"+91 9016278391","sellerPhone":"+91 9016278391"}
+[2026-02-13T19:24:59.532Z] INFO Acceptance notification sent to seller
+[2026-02-13T19:24:59.541Z] INFO Test mode enabled; redirecting WhatsApp message {"from":"+91 9016278391","to":"+****8391"}
+[2026-02-13T19:24:59.531Z] INFO WhatsApp message sent {"to":"+****8391","testMode":true}
+[2026-02-13T19:24:59.543Z] INFO Sending WhatsApp message {"to":"+****8391","length":399}
+[2026-02-13T19:24:59.942Z] INFO Acceptance notification sent to buyer
+[2026-02-13T19:24:59.942Z] INFO Acceptance notification sent to buyer
+[2026-02-13T19:24:59.941Z] INFO WhatsApp message sent {"to":"+****8391","testMode":true}

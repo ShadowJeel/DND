@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isBuyerOwner(buyerId) {
+      let buyerInfo = get(/databases/$(database)/documents/buyers/$(buyerId)).data;
+      return isAuthenticated() && (buyerInfo.auth_uid == request.auth.uid || buyerInfo.email == request.auth.token.email || buyerInfo.google_email == request.auth.token.email);
+    }
+
+    function isSellerOwner(sellerId) {
+      let sellerInfo = get(/databases/$(database)/documents/sellers/$(sellerId)).data;
+      return isAuthenticated() && (sellerInfo.auth_uid == request.auth.uid || sellerInfo.email == request.auth.token.email || sellerInfo.google_email == request.auth.token.email);
+    }
+    
+    // Check if the user is the official admin
+    function isAdmin() {
+      return isAuthenticated() && (request.auth.token.admin == true || request.auth.token.email == 'admin@dnd.com');
+    }
+
+    // Buyers Collection
+    match /buyers/{userId} {
+      allow create: if true; // Registration
+      allow read: if true;
+      allow update, delete: if (isAuthenticated() && (resource.data.auth_uid == request.auth.uid || resource.data.email == request.auth.token.email || resource.data.google_email == request.auth.token.email)) || isAdmin();
+    }
+
+    // Sellers Collection
+    match /sellers/{userId} {
+      allow create: if true; // Registration
+      allow read: if true;
+      allow update, delete: if (isAuthenticated() && (resource.data.auth_uid == request.auth.uid || resource.data.email == request.auth.token.email || resource.data.google_email == request.auth.token.email)) || isAdmin();
+    }
+
+    // Products & Product Options Collection
+    // - Anyone can read (for the marketplace/catalog)
+    // - Only Admins can modify products and options
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /product_options/{optionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Inquiries Collection
+    match /inquiries/{inquiryId} {
+      allow read: if isAuthenticated();
+      allow create: if isBuyerOwner(request.resource.data.buyer_id);
+      allow update, delete: if isBuyerOwner(resource.data.buyer_id) || isAdmin();
+    }
+
+    // Inquiry Items Collection
+    // - Items attached to inquiries
+    match /inquiry_items/{itemId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() || isAdmin();
+    }
+
+    // Offers Collection
+    match /offers/{offerId} {
+      allow read: if isAuthenticated();
+      allow create: if isSellerOwner(request.resource.data.seller_id);
+      allow update: if isSellerOwner(resource.data.seller_id) || isBuyerOwner(get(/databases/$(database)/documents/inquiries/$(resource.data.inquiry_id)).data.buyer_id) || isAdmin();
+      allow delete: if isSellerOwner(resource.data.seller_id) || isAdmin();
+    }
+
+    // Default fallback - deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

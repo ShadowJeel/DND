@@ -1,0 +1,68 @@
+PRIVACY POLICY
+
+Last Updated: February 14, 2026
+
+1. INTRODUCTION
+Welcome to DND Purchase ("we," "our," or "us"). We are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our web application (the "Service"). Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the Service.
+
+2. INFORMATION WE COLLECT
+
+We may collect information about you in a variety of ways. The information we may collect includes:
+
+2.1 Personal Data
+Files or information that you voluntarily give to us when you register with the Service or when you choose to participate in various activities related to the Service, such as:
+- Name
+- Email address
+- Phone number (used for WhatsApp notifications)
+- Company name and details
+- Government identification (Aadhaar, GSTIN certificates for verification)
+
+2.2 Derivative Data
+Information our servers automatically collect when you access the Service, such as your IP address, your browser type, your operating system, your access times, and the pages you have viewed directly before and after accessing the Service.
+
+3. USE OF YOUR INFORMATION
+
+Having accurate information about you permits us to provide you with a smooth, efficient, and customized experience. Specifically, we may use information collected about you via the Service to:
+- Create and manage your account (Buyer or Seller).
+- Process inquiries, offers, and orders.
+- Send you notifications regarding your account or order status via WhatsApp (using Meta Platforms, Inc.).
+- Verify your identity and business credentials to maintain marketplace integrity.
+- Resolve disputes and troubleshoot problems.
+- Prevent fraudulent transactions, monitor against theft, and protect against criminal activity.
+
+4. DISCLOSURE OF YOUR INFORMATION
+
+We may share information we have collected about you in certain situations. Your information may be disclosed as follows:
+
+4.1 By Law or to Protect Rights
+If we believe the release of information about you is necessary to respond to legal process, to investigate or remedy potential violations of our policies, or to protect the rights, property, and safety of others, we may share your information as permitted or required by any applicable law, rule, or regulation.
+
+4.2 Third-Party Service Providers
+We may share your information with third parties that perform services for us or on our behalf, including:
+- Supabase (Database and Authentication services)
+- Meta Platforms, Inc. (WhatsApp Cloud API for messaging)
+- Cloudinary (File storage and media hosting)
+
+4.3 Business Transfers
+If we reorganize or sell all or a portion of our assets, undergo a merger, or are acquired by another entity, we may transfer your information to the successor entity.
+
+5. WHATSAPP COMMUNICATIONS
+
+By providing your phone number and agreeing to our Terms, you consent to receive transaction-related notifications (such as new inquiries, offers, and order updates) via WhatsApp. You acknowledge that these messages are processed by Meta Platforms, Inc. in accordance with their privacy policy.
+
+6. DATA SECURITY
+
+We use administrative, technical, and physical security measures to help protect your personal information. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable, and no method of data transmission can be guaranteed against any interception or other type of misuse.
+
+7. POLICY FOR CHILDREN
+
+We do not knowingly solicit information from or market to children under the age of 18. If you become aware of any data we have collected from children under age 18, please contact us using the contact information provided below.
+
+8. CONTACT US
+
+If you have questions or comments about this Privacy Policy, please contact us at:
+
+DND Purchase Team
+Email: support@dndpurchase.com
+Phone: +91 9016278391
+Address: Ahmedabad, Gujarat, India
