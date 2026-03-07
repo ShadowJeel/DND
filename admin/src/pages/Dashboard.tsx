@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { Users, FileText, ShoppingCart, TrendingUp } from "lucide-react"
-import { collection, getCountFromServer, query, orderBy, limit, getDocs } from "firebase/firestore"
+import { collection, getCountFromServer, query, orderBy, limit} from "firebase/firestore"
 import { db } from "../lib/firebase"
 
 export function Dashboard() {

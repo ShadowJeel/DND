@@ -2,9 +2,9 @@ import { logger } from "@/lib/logger"
 import { deleteOffer, getOfferById, updateOffer } from "@/lib/store"
 import { NextResponse } from "next/server"
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const { id } = params
+        const { id } = await params
         const body = await req.json()
         const { pricePerTon, comments, pdfUrl, contactEmail, contactPhone } = body
 
@@ -36,9 +36,9 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        const { id } = params
+        const { id } = await params
 
         if (!id) {
             return NextResponse.json({ error: "Offer ID required" }, { status: 400 })

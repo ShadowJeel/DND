@@ -8,12 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/lib/auth-context"
-import { AlertCircle, ArrowUpDown, CheckCircle, Clock, FileText, Gavel, Lock, Mail, Phone, Tag, Trash2, Trophy } from "lucide-react"
+import { AlertCircle, ArrowUpDown, CheckCircle, Clock, FileText, Gavel, Lock, Mail, Phone, Tag, Trash2, Trophy, RotateCcw } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
 import { toast } from "sonner"
 import useSWR from "swr"
-import { getInquiryById, getOffersByInquiryId, getInquiriesByBuyerId, acceptOffer, disqualifyOffer, closeInquiry } from "@/lib/store"
+import { getInquiryById, getOffersByInquiryId, getInquiriesByBuyerId, acceptOffer, disqualifyOffer, closeInquiry, softDeleteOffer, activateBidding } from "@/lib/store"
 
 function rankBadge(rank?: number) {
   if (!rank) return <span className="text-muted-foreground">-</span>
@@ -75,7 +75,20 @@ function OffersContent() {
 
     mutate()
     if (mutateInquiry) mutateInquiry()
-    toast.success("Offer accepted! Seller notified via WhatsApp.")
+    toast.success("Offer accepted! Seller notified via Email and SMS.")
+  }
+
+  const handleRebid = async (offerId: string) => {
+    try {
+      await softDeleteOffer(offerId)
+      if (inquiryId) await activateBidding(inquiryId, 3)
+
+      mutate()
+      if (mutateInquiry) mutateInquiry()
+      toast.success("Bidding resumed for 3 days. The offer has been removed.")
+    } catch (error) {
+      toast.error("Failed to resume bidding")
+    }
   }
 
   if (!inquiryId) {
@@ -340,6 +353,18 @@ function OffersContent() {
                           </div>
                         ))}
                       </div>
+
+                      {(() => {
+                        const acceptedOffer = itemOffers.find((o: any) => o.status === "accepted");
+                        if (!acceptedOffer) return null;
+                        return (
+                          <div className="p-4 border-t border-border flex justify-end bg-muted/20">
+                            <Button size="sm" variant="outline" className="h-9 gap-1.5 text-sm text-primary hover:text-primary bg-primary/5 hover:bg-primary/10 border-primary/20" onClick={() => handleRebid(acceptedOffer.id)}>
+                              <RotateCcw className="h-4 w-4" /> Re-bid & Resume Bidding
+                            </Button>
+                          </div>
+                        );
+                      })()}
                     </CardContent>
                   </Card>
                 )}

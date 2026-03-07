@@ -1,6 +1,7 @@
 import { logger } from "@/lib/logger"
 import { registerUser } from "@/lib/store"
-import { sendWelcomeMessage } from "@/lib/whatsapp"
+import { sendWelcomeEmail } from "@/lib/email"
+import { sendWelcomeSMS } from "@/lib/sms"
 import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
@@ -11,16 +12,17 @@ export async function POST(req: Request) {
     phone
   } = body
 
-  if (!phone) {
+  if (!phone || !email) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
 
-  // Send welcome WhatsApp message
+  // Send welcome Email and SMS
   try {
-    await sendWelcomeMessage(phone)
-  } catch (whatsappError) {
-    logger.error("Failed to send welcome WhatsApp message", { error: (whatsappError as Error)?.message })
-    // Don't fail the request if WhatsApp fails
+    if (email) await sendWelcomeEmail(email, name || "User")
+    if (phone) await sendWelcomeSMS(phone, name || "User")
+  } catch (notificationError) {
+    logger.error("Failed to send welcome notifications", { error: (notificationError as Error)?.message })
+    // Don't fail the request if notifications fail
   }
 
   return NextResponse.json({ success: true }, { status: 201 })

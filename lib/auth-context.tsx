@@ -19,6 +19,7 @@ interface AuthUser {
   gstCertificateName?: string
   verified: boolean
   googleConnected: boolean
+  categories?: string[]
 }
 
 interface AuthContextType {
@@ -101,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return false
     }
 
-    // 2. Fetch the rich user profile & trigger backend routines (WhatsApp)
+    // 2. Fetch the rich user profile & trigger backend routines (Email/SMS)
     let userData;
     try {
       userData = await storeLoginUser(email, password, role)
@@ -117,10 +118,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: userData.phone }),
+        body: JSON.stringify({ phone: userData.phone, email: userData.email, name: userData.name }),
       })
     } catch (e) {
-      // WhatsApp notification error
+      // Notification error (Email/SMS)
     }
 
     // Update allUsers and set current user
@@ -187,6 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         aadhaarNumber: payload.entityType === "individual" ? payload.aadhaarNumber : undefined,
         aadhaarDocumentPath: payload.entityType === "individual" ? payload.documentPath : undefined,
         googleConnected: false,
+        categories: payload.categories ? JSON.parse(payload.categories) : undefined,
       })
     } catch (e: any) {
       logger.error("Native Firestore profile creation failed", { error: e.message })
@@ -194,11 +196,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // 3. Ping backend for WhatsApp Welcome Notification
+      // 3. Ping backend for Email and SMS Welcome Notification
       await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: userData.phone }),
+        body: JSON.stringify({ phone: userData.phone, email: userData.email, name: userData.name }),
       })
     } catch (e) {
       // Background process, not critical to block UI

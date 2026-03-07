@@ -353,7 +353,7 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <Label htmlFor="phone" className="text-foreground">
-                    Contact Number (WhatsApp)
+                    Contact Number
                   </Label>
                   <Input
                     id="phone"
@@ -364,7 +364,7 @@ export default function RegisterPage() {
                     className="mt-1.5"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
-                    This must be a WhatsApp number for communication
+                    This number will be used for SMS and Email communication
                   </p>
                 </div>
                 <div>

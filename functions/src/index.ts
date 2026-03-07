@@ -6,6 +6,7 @@ const db = admin.firestore();
 
 // Listen for updates to the 'offers' collection
 export const aggregateRevenueOnOfferUpdate = functions.firestore
+    .database("sdnds")
     .document("offers/{offerId}")
     .onUpdate(async (change, context) => {
         const newValue = change.after.data();
@@ -31,6 +32,50 @@ export const aggregateRevenueOnOfferUpdate = functions.firestore
                 }, { merge: true });
 
                 console.log(`Added ₹${platformFee} to total revenue from offer ${context.params.offerId}`);
+            }
+        }
+
+        return null;
+    });
+
+// Delete Firebase Auth user when their buyer document is deleted
+export const onBuyerDeleted = functions.firestore
+    .database("sdnds")
+    .document("buyers/{buyerId}")
+    .onDelete(async (snap, context) => {
+        const buyerId = context.params.buyerId;
+
+        try {
+            await admin.auth().getUser(buyerId);
+            await admin.auth().deleteUser(buyerId);
+            console.log(`Successfully deleted Firebase Auth user for buyer: ${buyerId}`);
+        } catch (error: any) {
+            if (error.code === 'auth/user-not-found') {
+                console.log(`Firebase Auth user for buyer ${buyerId} already deleted or not found.`);
+            } else {
+                console.error(`Error deleting Firebase Auth user for buyer ${buyerId}:`, error);
+            }
+        }
+
+        return null;
+    });
+
+// Delete Firebase Auth user when their seller document is deleted
+export const onSellerDeleted = functions.firestore
+    .database("sdnds")
+    .document("sellers/{sellerId}")
+    .onDelete(async (snap, context) => {
+        const sellerId = context.params.sellerId;
+
+        try {
+            await admin.auth().getUser(sellerId);
+            await admin.auth().deleteUser(sellerId);
+            console.log(`Successfully deleted Firebase Auth user for seller: ${sellerId}`);
+        } catch (error: any) {
+            if (error.code === 'auth/user-not-found') {
+                console.log(`Firebase Auth user for seller ${sellerId} already deleted or not found.`);
+            } else {
+                console.error(`Error deleting Firebase Auth user for seller ${sellerId}:`, error);
             }
         }
 

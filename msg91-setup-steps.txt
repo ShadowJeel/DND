@@ -1,0 +1,91 @@
+# MSG91 SMS Setup Guide & Templates
+
+## Step 1: Create an MSG91 Account
+1. Go to https://msg91.com/ and sign up for an account.
+2. Complete your KYC process if you haven't already.
+
+## Step 2: Get your Auth Key
+1. Log in to the MSG91 Dashboard.
+2. Go to the "Developers" or "API" section.
+3. Generate or copy your "Auth Key".
+4. Add this to your `.env` file as:
+   MSG91_AUTH_KEY=your_copied_auth_key_here
+
+## Step 3: Create SMS Templates
+1. In the MSG91 Dashboard, navigate to the "Flow" or "SMS Templates" section.
+2. Create 7 new templates corresponding to the features in your app.
+3. For each template, MSG91 will provide a `Template ID`. You must add these Template IDs to your `.env` file.
+
+Below are the 7 templates you need to create. Ensure you use the exact variable names (e.g., {#name#}) when creating templates.
+
+---
+
+### Template 1: Welcome SMS
+- **Template Name**: DND Welcome
+- **Message Content**:
+  Hello {#name#}, welcome to DND App! We are excited to have you on board.
+- **Variable**: {#name#}
+- **.env Variable**: MSG91_TEMPLATE_WELCOME=template_id_here
+
+### Template 2: New Enquiry Alert (For Sellers)
+- **Template Name**: DND New Enquiry
+- **Message Content**:
+  New Enquiry Alert! A new Enquiry matching your categories has been posted on DND. Log in to submit an offer.
+- **Variables**: (None)
+- **.env Variable**: MSG91_TEMPLATE_NEW_Enquiry=template_id_here
+
+### Template 3: Bidding Started (For Sellers)
+- **Template Name**: DND Bidding Started
+- **Message Content**:
+  Bidding has started for Enquiry #{#EnquiryId#}. Log in now to submit your offers before time runs out!
+- **Variable**: {#EnquiryId#}
+- **.env Variable**: MSG91_TEMPLATE_BIDDING_STARTED=template_id_here
+
+### Template 4: New Offer Received (For Buyers)
+- **Template Name**: DND New Offer
+- **Message Content**:
+  New Offer Received! You have a new offer on Enquiry #{#EnquiryId#}. Log in to review it.
+- **Variable**: {#EnquiryId#}
+- **.env Variable**: MSG91_TEMPLATE_NEW_OFFER=template_id_here
+
+### Template 5: Offer Accepted (For Buyers)
+- **Template Name**: DND Offer Accepted Buyer
+- **Message Content**:
+  Success! You have accepted Offer #{#offerId#}. Log in to see the seller's details.
+- **Variable**: {#offerId#}
+- **.env Variable**: MSG91_TEMPLATE_OFFER_ACCEPTED_BUYER=template_id_here
+
+### Template 6: Offer Accepted (For Sellers)
+- **Template Name**: DND Offer Accepted Seller
+- **Message Content**:
+  Congratulations! Your Offer #{#offerId#} has been accepted. Log in to contact the buyer.
+- **Variable**: {#offerId#}
+- **.env Variable**: MSG91_TEMPLATE_OFFER_ACCEPTED_SELLER=template_id_here
+
+### Template 7: Offer Rejected (For Sellers)
+- **Template Name**: DND Offer Rejected Seller
+- **Message Content**:
+  Update: Your Offer #{#offerId#} was not accepted this time. Keep bidding on other inquiries!
+- **Variable**: {#offerId#}
+- **.env Variable**: MSG91_TEMPLATE_OFFER_REJECTED_SELLER=template_id_here
+
+---
+
+## Step 4: Update your .env File
+Copy and paste this block into your `.env` file, replacing the placeholder values with the actual Template IDs and Auth Key from MSG91.
+
+MSG91_AUTH_KEY=your_msg91_auth_key
+MSG91_TEMPLATE_WELCOME=
+MSG91_TEMPLATE_NEW_Enquiry=
+MSG91_TEMPLATE_BIDDING_STARTED=
+MSG91_TEMPLATE_NEW_OFFER=
+MSG91_TEMPLATE_OFFER_ACCEPTED_BUYER=
+MSG91_TEMPLATE_OFFER_ACCEPTED_SELLER=
+MSG91_TEMPLATE_OFFER_REJECTED_SELLER=
+
+
+## Step 5: DLT Registration (For Indian Numbers Only)
+If you are sending SMS to Indian mobile numbers, you will also need to:
+1. Register your business on a DLT platform (like Jio, PingConnect, trueconnect, etc.).
+2. Register your "Sender ID" on DLT.
+3. Register these exact message templates on the DLT platform to get Template IDs, and add these DLT Template IDs to your MSG91 templates.

@@ -167,12 +167,16 @@ export default function CartPage() {
                     biddingDuration: Number(biddingDuration) || 3
                 }),
             })
-            if (!res.ok) throw new Error()
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}))
+                throw new Error(errorData.error || "Failed to submit inquiry to server")
+            }
             toast.success("Inquiry submitted successfully!")
             clearCart() // Clear global cart 
             router.push("/dashboard/inquiries")
-        } catch {
-            toast.error("Failed to submit inquiry")
+        } catch (error: any) {
+            console.error("Submission error:", error)
+            toast.error(error?.message || "Failed to submit inquiry")
         } finally {
             setSubmitting(false)
         }

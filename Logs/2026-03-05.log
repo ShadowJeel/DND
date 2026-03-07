@@ -1,0 +1,32 @@
+[2026-03-05T04:14:08.684Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-05T04:14:09.716Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Wednesday, 04-Mar-26 20:14:09 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"A0zR57rbF5EbQm2pk2JIDu7"}}}
+[2026-03-05T16:03:32.941Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-05T16:03:33.254Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Thursday, 05-Mar-26 08:03:33 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"AkzkBbFiy2ZBxmdERQ7QKlZ"}}}
+[2026-03-05T16:04:09.557Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"bidding_started"}
+[2026-03-05T16:04:09.551Z] INFO New inquiry created client-side, sending notifications {"inquiryId":"INQ-0003","sellerCount":1}
+[2026-03-05T16:04:09.844Z] INFO New inquiry notifications complete {"successful":0,"failed":0}
+[2026-03-05T16:04:09.844Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Thursday, 05-Mar-26 08:04:09 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"Azi6bz-h7aoI8BSMokftIG5"}}}
+[2026-03-05T16:12:51.988Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-05T16:12:52.677Z] ERROR Meta API error {"error":{"error":{"message":"Authentication Error","code":190,"type":"OAuthException","fbtrace_id":"AecS0uKXjrD4ZlDpz5e0TCA"}}}
+[2026-03-05T16:13:50.388Z] INFO New inquiry created client-side, sending notifications {"inquiryId":"INQ-0001","sellerCount":0}
+[2026-03-05T16:13:50.390Z] WARN No verified sellers found for inquiry notification
+[2026-03-05T16:15:20.180Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-05T16:15:20.574Z] ERROR Meta API error {"error":{"error":{"message":"Authentication Error","code":190,"type":"OAuthException","fbtrace_id":"AcmYw5dUU4gpgkSZaeO5R9O"}}}
+[2026-03-05T16:15:55.195Z] INFO New offer submitted {"inquiryId":"INQ-0001"}
+[2026-03-05T16:15:55.240Z] ERROR Failed to send WhatsApp notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-03-05T16:17:07.922Z] INFO Accepted offer Whatsapp routine started {"offerId":"OFR-0001"}
+[2026-03-05T16:17:07.948Z] ERROR Failed to send WhatsApp notification for acceptance {"error":"Missing or insufficient permissions."}
+[2026-03-05T16:17:48.640Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-05T16:17:48.951Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Thursday, 05-Mar-26 08:17:48 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"APJmb3Ypmo6g51eMJ8UPuPY"}}}
+[2026-03-05T17:02:08.031Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-05T17:02:08.336Z] ERROR Meta API error {"error":{"error":{"message":"Authentication Error","code":190,"type":"OAuthException","fbtrace_id":"Aa6AXChEvoHU-bhCOKUa-Ke"}}}
+[2026-03-05T17:02:35.512Z] INFO New offer submitted {"inquiryId":"INQ-0001"}
+[2026-03-05T17:02:35.615Z] ERROR Failed to send WhatsApp notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-03-05T17:05:13.106Z] INFO Accepted offer Whatsapp routine started {"offerId":"OFR-0002"}
+[2026-03-05T17:05:13.172Z] ERROR Failed to send WhatsApp notification for acceptance {"error":"Missing or insufficient permissions."}
+[2026-03-05T17:06:50.924Z] INFO Sending Meta WhatsApp message {"to":"****8391","template":"hello_world"}
+[2026-03-05T17:06:51.245Z] ERROR Meta API error {"error":{"error":{"message":"Error validating access token: Session has expired on Saturday, 21-Feb-26 01:00:00 PST. The current time is Thursday, 05-Mar-26 09:06:51 PST.","type":"OAuthException","code":190,"error_subcode":463,"fbtrace_id":"AMuAk4j1D0JkC-wE2yDZ8ne"}}}
+[2026-03-05T17:07:22.932Z] INFO New offer submitted {"inquiryId":"INQ-0001"}
+[2026-03-05T17:07:22.997Z] ERROR Failed to send WhatsApp notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-03-05T17:07:45.936Z] INFO Accepted offer Whatsapp routine started {"offerId":"OFR-0003"}
+[2026-03-05T17:07:45.969Z] ERROR Failed to send WhatsApp notification for acceptance {"error":"Missing or insufficient permissions."}

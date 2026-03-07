@@ -108,7 +108,7 @@ export default function DashboardOverview() {
               <CardContent>
                 <div className="text-3xl font-bold text-foreground">
                   {offerCount > 0
-                    ? `${Math.round((sellerOffers.filter((o: { status: string }) => o.status === "accepted").length / offerCount) * 100)}%`
+                    ? `${Math.round(((Array.isArray(sellerOffers) ? sellerOffers : []).filter((o: { status: string }) => o.status === "accepted").length / offerCount) * 100)}%`
                     : "N/A"}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">Offers accepted</p>

@@ -1,6 +1,7 @@
 import { logger } from "@/lib/logger"
 import { activateBidding, closeInquiry, deleteInquiryItem, getInquiryById, getSellerPhonesFromOffers, updateInquiryItem } from "@/lib/store"
-import { notifySellersOfBidding } from "@/lib/whatsapp"
+import { notifySellersOfBiddingEmail } from "@/lib/email"
+import { notifySellersOfBiddingSMS } from "@/lib/sms"
 import { NextResponse } from "next/server"
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -43,15 +44,18 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
             const deadline = new Date()
             deadline.setDate(deadline.getDate() + durationInDays)
 
-            await notifySellersOfBidding(sellerPhones, id, deadline, itemsStr)
+            await Promise.all(sellerPhones.map(async (phone) => {
+              // We only have phones right now from getSellerPhonesFromOffers
+              await notifySellersOfBiddingSMS(phone, id).catch(e => logger.error("Failed to send SMS", { error: (e as Error).message }))
+            }))
             logger.info("Bidding notifications sent")
           } else {
             logger.warn("No sellers with offers to notify for bidding", { inquiryId: id })
           }
         }
-      } catch (whatsappError) {
-        logger.error("Failed to send WhatsApp notifications for bidding", { error: (whatsappError as Error)?.message })
-        // Don't fail the request if WhatsApp fails
+      } catch (notificationError) {
+        logger.error("Failed to send notifications for bidding", { error: (notificationError as Error)?.message })
+        // Don't fail the request if notification fails
       }
 
       return NextResponse.json({ success: true })

@@ -10,7 +10,7 @@ import { useAuth } from "@/lib/auth-context"
 import { ArrowLeft, Factory } from "lucide-react"
 import Link from "next/link"
 import { auth } from "@/lib/firebase"
-import { signInWithPopup, GoogleAuthProvider } from "firebase/auth"
+import { signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from "firebase/auth"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -21,6 +21,23 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error("Please enter your email address first")
+      return
+    }
+    setLoading(true)
+    try {
+      await sendPasswordResetEmail(auth, email)
+      toast.success("Password reset link sent! Check your email.")
+    } catch (error: any) {
+      toast.error(error.message || "Failed to send password reset email")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) {
@@ -94,7 +111,12 @@ export default function LoginPage() {
                 <Input id="email" type="email" placeholder="john@company.com" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" />
               </div>
               <div>
-                <Label htmlFor="password" className="text-foreground">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-foreground">Password</Label>
+                  <button type="button" onClick={handleForgotPassword} disabled={loading} className="text-sm font-medium text-primary hover:underline">
+                    Forgot Password?
+                  </button>
+                </div>
                 <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1.5" />
               </div>
               <Button type="submit" className="mt-2 w-full" disabled={loading}>

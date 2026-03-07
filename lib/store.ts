@@ -25,6 +25,7 @@ export interface User {
   verified: boolean
   googleConnected: boolean
   createdAt: string
+  categories?: string[]
 }
 
 export interface InquiryItem {
@@ -60,7 +61,7 @@ export interface Offer {
   pdfUrl?: string
   contactEmail?: string
   contactPhone?: string
-  status: "pending" | "accepted" | "rejected" | "disqualified"
+  status: "pending" | "accepted" | "rejected" | "disqualified" | "deleted"
   rank?: number
   buyerName?: string
   buyerEmail?: string
@@ -109,6 +110,7 @@ function mapSellerFromDb(row: any, id: string): User {
     verified: Boolean(row.verified),
     googleConnected: Boolean(row.google_connected),
     createdAt: row.created_at,
+    categories: row.categories || [],
   }
 }
 
@@ -301,6 +303,7 @@ export async function registerUser(data: Omit<User, "id" | "verified" | "created
       google_connected: false,
       created_at: createdAt,
       auth_uid: auth.currentUser?.uid || null,
+      categories: data.categories || [],
     })
 
     return {
@@ -321,6 +324,7 @@ export async function registerUser(data: Omit<User, "id" | "verified" | "created
       verified: false,
       googleConnected: false,
       createdAt,
+      categories: data.categories || [],
     }
   }
 }
@@ -350,15 +354,33 @@ export async function loginUser(email: string, password: string, role?: UserRole
 }
 
 export async function loginUserWithGoogle(email: string): Promise<User | null> {
-  const bq = query(collection(db, "buyers"), or(where("email", "==", email), where("google_email", "==", email)), where("google_connected", "==", true), limit(1))
+  const bq = query(collection(db, "buyers"), or(where("email", "==", email), where("google_email", "==", email)), limit(1))
   const bSnap = await getDocs(bq)
-  if (!bSnap.empty) return mapBuyerFromDb(bSnap.docs[0].data(), bSnap.docs[0].id)
+  if (!bSnap.empty) {
+    const docSnap = bSnap.docs[0]
+    const data = docSnap.data()
+    if (!data.google_connected || !data.google_email) {
+      await updateDoc(doc(db, "buyers", docSnap.id), { google_connected: true, google_email: email })
+      data.google_connected = true
+      data.google_email = email
+    }
+    return mapBuyerFromDb(data, docSnap.id)
+  }
 
-  const sq = query(collection(db, "sellers"), or(where("email", "==", email), where("google_email", "==", email)), where("google_connected", "==", true), limit(1))
+  const sq = query(collection(db, "sellers"), or(where("email", "==", email), where("google_email", "==", email)), limit(1))
   const sSnap = await getDocs(sq)
-  if (!sSnap.empty) return mapSellerFromDb(sSnap.docs[0].data(), sSnap.docs[0].id)
+  if (!sSnap.empty) {
+    const docSnap = sSnap.docs[0]
+    const data = docSnap.data()
+    if (!data.google_connected || !data.google_email) {
+      await updateDoc(doc(db, "sellers", docSnap.id), { google_connected: true, google_email: email })
+      data.google_connected = true
+      data.google_email = email
+    }
+    return mapSellerFromDb(data, docSnap.id)
+  }
 
-  logger.warn(`Failed Google Login: Email ${email} not found or not connected.`)
+  logger.warn(`Failed Google Login: Email ${email} not found.`)
   return null
 }
 
@@ -536,6 +558,17 @@ export async function closeInquiry(inquiryId: string): Promise<void> {
   }
 }
 
+export async function reopenInquiry(inquiryId: string): Promise<void> {
+  const q = query(collection(db, "inquiries"), where("id", "==", inquiryId), limit(1))
+  const snap = await getDocs(q)
+  if (!snap.empty) {
+    await updateDoc(doc(db, "inquiries", snap.docs[0].id), {
+      status: "open",
+      bidding_deadline: null
+    })
+  }
+}
+
 export async function getSellerPhonesFromOffers(inquiryId: string): Promise<string[]> {
   const q = query(collection(db, "offers"), where("inquiry_id", "==", inquiryId))
   const snap = await getDocs(q)
@@ -558,6 +591,26 @@ export async function getAllSellerPhones(): Promise<string[]> {
   const q = query(collection(db, "sellers"), where("verified", "==", true))
   const snap = await getDocs(q)
   return snap.docs.map(d => d.data().phone).filter(p => !!p)
+}
+
+export async function getSellerPhonesByCategories(categories: string[]): Promise<string[]> {
+  if (!categories || categories.length === 0) return []
+
+  // We fetch all verified sellers and filter in memory since firestore array-contains-any 
+  // has a limit of 10 and we might have more categories or want simpler logic.
+  // If the number of sellers grows huge, this would need optimization, but for now it's fine.
+  const q = query(collection(db, "sellers"), where("verified", "==", true))
+  const snap = await getDocs(q)
+
+  return snap.docs
+    .map(d => d.data())
+    .filter(seller => {
+      const sellerCategories: string[] = seller.categories || []
+      // Check if there is any intersection between seller categories and required categories
+      return sellerCategories.some(c => categories.includes(c))
+    })
+    .map(seller => seller.phone)
+    .filter(p => !!p)
 }
 
 export async function activateBidding(inquiryId: string, durationInDays: number): Promise<void> {
@@ -625,6 +678,9 @@ export async function getOffersByInquiryId(inquiryId: string): Promise<Offer[]> 
 
   let offers = snap.docs.map(d => mapOfferFromDb(d.data(), d.id))
 
+  // Filter out soft-deleted offers
+  offers = offers.filter(o => o.status !== "deleted")
+
   // Sort ascending by price_per_ton, then ascending by created_at
   offers.sort((a, b) => {
     if (a.pricePerTon === b.pricePerTon) {
@@ -662,7 +718,7 @@ export async function getOffersByInquiryId(inquiryId: string): Promise<Offer[]> 
 export async function getOffersBySellerId(sellerId: string): Promise<Offer[]> {
   const q = query(collection(db, "offers"), where("seller_id", "==", sellerId))
   const snap = await getDocs(q)
-  const offers = snap.docs.map(d => mapOfferFromDb(d.data(), d.id))
+  const offers = snap.docs.map(d => mapOfferFromDb(d.data(), d.id)).filter(o => o.status !== "deleted")
 
   offers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
@@ -775,6 +831,14 @@ export async function disqualifyOffer(offerId: string): Promise<void> {
   }
 }
 
+export async function softDeleteOffer(offerId: string): Promise<void> {
+  const q = query(collection(db, "offers"), where("id", "==", offerId), limit(1))
+  const snap = await getDocs(q)
+  if (!snap.empty) {
+    await updateDoc(doc(db, "offers", snap.docs[0].id), { status: "deleted" })
+  }
+}
+
 export async function updateOfferRanks(inquiryItemId: string): Promise<void> {
   const q = query(collection(db, "offers"), where("inquiry_item_id", "==", inquiryItemId), where("status", "==", "pending"))
   const snap = await getDocs(q)
@@ -847,15 +911,31 @@ export interface UpdateUserData {
   email?: string
   phone?: string
   company?: string
+  categories?: string[]
 }
 
 export async function updateUser(userId: string, updates: UpdateUserData): Promise<User | null> {
-  const dbUpdates: any = {}
-  if (updates.name !== undefined) dbUpdates.name = updates.name
-  if (updates.email !== undefined) dbUpdates.email = updates.email
-  if (updates.phone !== undefined) dbUpdates.phone = updates.phone
-  if (updates.company !== undefined) dbUpdates.company = updates.company
+  const updateData: any = {}
 
+  if (updates.name !== undefined) updateData.name = updates.name
+  if (updates.phone !== undefined) updateData.phone = updates.phone
+  if (updates.company !== undefined) updateData.company = updates.company
+  if (updates.categories !== undefined) updateData.categories = updates.categories
+
+  try {
+    if (userId.startsWith("BUY-")) {
+      await updateDoc(doc(db, "buyers", userId), updateData)
+    } else if (userId.startsWith("SEL-")) {
+      await updateDoc(doc(db, "sellers", userId), updateData)
+    } else {
+      return null
+    }
+
+    return await getUserById(userId)
+  } catch (error: any) {
+    logger.error("Failed to update user profile", { error: error.message, userId })
+    throw error
+  }
   if (Object.keys(dbUpdates).length === 0) {
     return getUserById(userId)
   }

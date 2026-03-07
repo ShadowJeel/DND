@@ -80,7 +80,7 @@ export default function SellerMyOffersPage() {
       if (selectedPdf) {
         setPdfUploadProgress(true)
         const fileRef = ref(storage, `quotes/${Date.now()}_${editingOffer.inquiryId}_${editingOffer.inquiryItemId}.pdf`)
-        await uploadBytes(fileRef, selectedPdf)
+        await uploadBytes(fileRef, selectedPdf, { contentType: "application/pdf" })
         finalPdfUrl = await getDownloadURL(fileRef)
         setPdfUploadProgress(false)
       }

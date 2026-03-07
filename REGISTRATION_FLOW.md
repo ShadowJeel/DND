@@ -29,8 +29,8 @@ Users verify their identity:
 
 ### Step 5: Personal/Company Details
 Users provide their information:
-- **Company**: Company name, email, contact number (WhatsApp), password
-- **Individual**: Your name, email, contact number (WhatsApp), password
+- **Company**: Company name, email, contact number, password
+- **Individual**: Your name, email, contact number, password
 
 ## Database Schema
 
@@ -39,7 +39,7 @@ Users provide their information:
 - id: TEXT PRIMARY KEY
 - name: TEXT NOT NULL
 - email: TEXT UNIQUE NOT NULL
-- phone: TEXT NOT NULL (WhatsApp number)
+- phone: TEXT NOT NULL (For SMS notifications)
 - password: TEXT NOT NULL
 - company: TEXT (optional for individuals)
 - entity_type: TEXT NOT NULL ('company' | 'individual')
@@ -57,7 +57,7 @@ Users provide their information:
 - id: TEXT PRIMARY KEY
 - name: TEXT NOT NULL
 - email: TEXT UNIQUE NOT NULL
-- phone: TEXT NOT NULL (WhatsApp number)
+- phone: TEXT NOT NULL (For SMS notifications)
 - password: TEXT NOT NULL
 - company: TEXT NOT NULL
 - entity_type: TEXT NOT NULL ('company' | 'individual')
@@ -127,7 +127,7 @@ Register a new user
 {
   "name": "string",
   "email": "string",
-  "phone": "string (WhatsApp)",
+  "phone": "string",
   "password": "string",
   "company": "string (optional for individuals)",
   "role": "buyer" | "seller",
@@ -205,5 +205,5 @@ Register a new user
 - Always use `getUserDisplayName()` when displaying user names in the UI
 - Never expose real names of other users in API responses
 - Document paths are stored as relative paths in the database
-- All phone numbers should be WhatsApp-enabled for communication
+- All phone numbers should be valid for SMS communication
 - The uploads folder has .gitignore to protect sensitive documents
