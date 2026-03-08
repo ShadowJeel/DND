@@ -6,7 +6,6 @@ const db = admin.firestore();
 
 // Listen for updates to the 'offers' collection
 export const aggregateRevenueOnOfferUpdate = functions.firestore
-    .database("sdnds")
     .document("offers/{offerId}")
     .onUpdate(async (change, context) => {
         const newValue = change.after.data();
@@ -40,7 +39,6 @@ export const aggregateRevenueOnOfferUpdate = functions.firestore
 
 // Delete Firebase Auth user when their buyer document is deleted
 export const onBuyerDeleted = functions.firestore
-    .database("sdnds")
     .document("buyers/{buyerId}")
     .onDelete(async (snap, context) => {
         const buyerId = context.params.buyerId;
@@ -62,7 +60,6 @@ export const onBuyerDeleted = functions.firestore
 
 // Delete Firebase Auth user when their seller document is deleted
 export const onSellerDeleted = functions.firestore
-    .database("sdnds")
     .document("sellers/{sellerId}")
     .onDelete(async (snap, context) => {
         const sellerId = context.params.sellerId;

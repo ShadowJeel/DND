@@ -14,7 +14,7 @@ const firebaseConfig = {
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app, "sdnds");
+const db = getFirestore(app, "(default)");
 const auth = getAuth(app);
 const storage = getStorage(app);
 

@@ -1,4 +1,6 @@
-import { Shield, Key, Info } from "lucide-react"
+import { Shield, Key, Info, Database, Activity, Terminal } from "lucide-react"
+import { testFirestoreGet, testFirestorePost } from "../lib/firebase"
+import { useState } from "react"
 
 export function Settings() {
     const adminEmail = import.meta.env.VITE_ADMIN_EMAIL || "admin@example.com";
@@ -75,7 +77,74 @@ export function Settings() {
                         </div>
                     </div>
                 </div>
+
+                {/* Diagnostics Section */}
+                <Diagnostics />
             </div>
         </div>
     )
+}
+
+function Diagnostics() {
+    const [status, setStatus] = useState<string>('Ready');
+    const [isTesting, setIsTesting] = useState(false);
+
+    const runTest = async (type: 'get' | 'post') => {
+        setIsTesting(true);
+        setStatus(`Running ${type.toUpperCase()} test...`);
+
+        try {
+            const result = type === 'get' ? await testFirestoreGet() : await testFirestorePost();
+            if (result.success) {
+                setStatus(`${type.toUpperCase()} Success! (${result.duration}ms). Check console for details.`);
+            } else {
+                setStatus(`${type.toUpperCase()} Failed! Error: ${result.error?.message || 'Unknown error'}. Check console for full trace.`);
+            }
+        } catch (err: any) {
+            setStatus(`Unexpected Code Error: ${err.message}`);
+        } finally {
+            setIsTesting(false);
+        }
+    };
+
+    return (
+        <div className="rounded-xl border border-border bg-card text-card-foreground shadow-sm p-6">
+            <h3 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                <Activity className="h-5 w-5 text-primary" /> Database Diagnostics
+            </h3>
+            <p className="text-sm text-muted-foreground mb-6">
+                Use these tools to verify if errors are coming from the database connection (permissions/network) or application code.
+            </p>
+
+            <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button
+                        onClick={() => runTest('get')}
+                        disabled={isTesting}
+                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-border bg-background hover:bg-accent transition-colors disabled:opacity-50"
+                    >
+                        <Database className="h-4 w-4" />
+                        Test Read (GET)
+                    </button>
+                    <button
+                        onClick={() => runTest('post')}
+                        disabled={isTesting}
+                        className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-border bg-background hover:bg-accent transition-colors disabled:opacity-50"
+                    >
+                        <Terminal className="h-4 w-4" />
+                        Test Write (POST)
+                    </button>
+                </div>
+
+                <div className={`p-4 rounded-lg border flex items-center gap-3 ${status.includes('Failed') ? 'bg-destructive/10 border-destructive/20 text-destructive' : 'bg-muted/50 border-border text-muted-foreground'}`}>
+                    <div className={`h-2 w-2 rounded-full ${isTesting ? 'bg-amber-500 animate-pulse' : status.includes('Success') ? 'bg-emerald-500' : status.includes('Failed') ? 'bg-destructive' : 'bg-muted-foreground'}`} />
+                    <span className="text-sm font-medium">{status}</span>
+                </div>
+
+                <p className="text-xs text-muted-foreground text-center">
+                    Detailed technical logs and error stack traces are printed to the <b>Browser Console (F12)</b>.
+                </p>
+            </div>
+        </div>
+    );
 }

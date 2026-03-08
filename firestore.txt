@@ -1,12 +1,12 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
@@ -20,10 +20,14 @@ service cloud.firestore {
       let sellerInfo = get(/databases/$(database)/documents/sellers/$(sellerId)).data;
       return isAuthenticated() && (sellerInfo.auth_uid == request.auth.uid || sellerInfo.email == request.auth.token.email || sellerInfo.google_email == request.auth.token.email);
     }
-    
+
     // Check if the user is the official admin
     function isAdmin() {
-      return isAuthenticated() && (request.auth.token.admin == true || request.auth.token.email == 'admin@dnd.com');
+      return isAuthenticated() && (
+        request.auth.token.admin == true ||
+        request.auth.token.email == 'admin@dnd.com' ||
+        request.auth.token.email == 'contact@dndpurchase.com'
+      );
     }
 
     // Buyers Collection
@@ -42,15 +46,15 @@ service cloud.firestore {
 
     // Products & Product Options Collection
     // - Anyone can read (for the marketplace/catalog)
-    // - Only Admins can modify products and options
+    // - Only Authenticated Admins (via Admin Portal) can modify
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAuthenticated();
     }
-    
+
     match /product_options/{optionId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAuthenticated();
     }
 
     // Inquiries Collection

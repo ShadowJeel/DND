@@ -936,20 +936,5 @@ export async function updateUser(userId: string, updates: UpdateUserData): Promi
     logger.error("Failed to update user profile", { error: error.message, userId })
     throw error
   }
-  if (Object.keys(dbUpdates).length === 0) {
-    return getUserById(userId)
-  }
-
-  if (userId.startsWith("BUY-")) {
-    const q = query(collection(db, "buyers"), where("id", "==", userId), limit(1))
-    const snap = await getDocs(q)
-    if (!snap.empty) await updateDoc(doc(db, "buyers", snap.docs[0].id), dbUpdates)
-    return getUserById(userId)
-  } else if (userId.startsWith("SEL-")) {
-    const q = query(collection(db, "sellers"), where("id", "==", userId), limit(1))
-    const snap = await getDocs(q)
-    if (!snap.empty) await updateDoc(doc(db, "sellers", snap.docs[0].id), dbUpdates)
-    return getUserById(userId)
-  }
-  return null
+  
 }
