@@ -150,8 +150,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = useCallback(async (data: Record<string, string> | FormData) => {
     const isFormData = typeof FormData !== "undefined" && data instanceof FormData
 
+    const payload: any = isFormData ? Object.fromEntries((data as FormData).entries()) : data
+
     // Extract credentials for native firebase layer
-    const payload = isFormData ? Object.fromEntries((data as FormData).entries()) as Record<string, string> : data as Record<string, string>
     const email = payload.email
     const password = payload.password
 
@@ -188,7 +189,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         aadhaarNumber: payload.entityType === "individual" ? payload.aadhaarNumber : undefined,
         aadhaarDocumentPath: payload.entityType === "individual" ? payload.documentPath : undefined,
         googleConnected: false,
-        categories: payload.categories ? JSON.parse(payload.categories) : undefined,
+        categories: payload.categories
+          ? (typeof payload.categories === 'string' ? JSON.parse(payload.categories) : payload.categories)
+          : undefined,
       })
     } catch (e: any) {
       logger.error("Native Firestore profile creation failed", { error: e.message })

@@ -936,5 +936,5 @@ export async function updateUser(userId: string, updates: UpdateUserData): Promi
     logger.error("Failed to update user profile", { error: error.message, userId })
     throw error
   }
-  
+
 }

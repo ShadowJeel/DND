@@ -34,14 +34,16 @@ service cloud.firestore {
     match /buyers/{userId} {
       allow create: if true; // Registration
       allow read: if true;
-      allow update, delete: if (isAuthenticated() && (resource.data.auth_uid == request.auth.uid || resource.data.email == request.auth.token.email || resource.data.google_email == request.auth.token.email)) || isAdmin();
+      allow update: if (isAuthenticated() && (resource.data.auth_uid == request.auth.uid || resource.data.email == request.auth.token.email || resource.data.google_email == request.auth.token.email)) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'verified', 'created_at', 'auth_uid', 'display_name']) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Sellers Collection
     match /sellers/{userId} {
       allow create: if true; // Registration
       allow read: if true;
-      allow update, delete: if (isAuthenticated() && (resource.data.auth_uid == request.auth.uid || resource.data.email == request.auth.token.email || resource.data.google_email == request.auth.token.email)) || isAdmin();
+      allow update: if (isAuthenticated() && (resource.data.auth_uid == request.auth.uid || resource.data.email == request.auth.token.email || resource.data.google_email == request.auth.token.email)) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'verified', 'created_at', 'auth_uid', 'display_name']) || isAdmin();
+      allow delete: if isAdmin();
     }
 
     // Products & Product Options Collection

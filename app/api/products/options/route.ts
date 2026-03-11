@@ -21,13 +21,33 @@ export async function GET(req: Request) {
         }
 
         const productDoc = productSnap.docs[0]
-        const productId = productDoc.data().product_id;
+        const productData = productDoc.data() as any
+        const productId = productData.product_id?.toString() || productDoc.id
 
         // Then get its options
-        const optionsQuery = query(collection(db, "product_options"), where("product_id", "==", productId))
+        const optionsQuery = query(collection(db, "product_options"), where("product_id", "==", String(productId)))
         const optionsSnap = await getDocs(optionsQuery)
 
-        const optionsData = optionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        const optionsData = optionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[]
+
+        // Explicit sorting: Checkbox > Dropdown > number > text, then alphabetical
+        const typePriority: Record<string, number> = {
+            'checkbox': 0,
+            'dropdown': 1,
+            'number': 2,
+            'text': 3
+        }
+
+        optionsData.sort((a, b) => {
+            const priorityA = typePriority[a.option_type] ?? 99
+            const priorityB = typePriority[b.option_type] ?? 99
+
+            if (priorityA !== priorityB) {
+                return priorityA - priorityB
+            }
+
+            return (a.option_name || "").localeCompare(b.option_name || "")
+        })
 
         return NextResponse.json(optionsData)
     } catch (error: any) {

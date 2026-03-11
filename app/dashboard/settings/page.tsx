@@ -6,24 +6,37 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useAuth } from "@/lib/auth-context"
 import { logger } from "@/lib/logger"
-import { Loader2, MessageCircle, Pencil, Save, X, BadgeCheck, Link as LinkIcon } from "lucide-react"
+import { Loader2, Pencil, Save, X, BadgeCheck, Link as LinkIcon, Package, Plus } from "lucide-react"
 import { auth } from "@/lib/firebase"
 import { linkWithPopup, GoogleAuthProvider } from "firebase/auth"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { updateUser } from "@/lib/store"
+import { updateUser, getProducts } from "@/lib/store"
 
 export default function SettingsPage() {
     const { user, updateUserData, connectGoogle } = useAuth()
     const [isEditing, setIsEditing] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [testingWhatsApp, setTestingWhatsApp] = useState(false)
     const [formData, setFormData] = useState({
         name: user?.name || "",
         email: user?.email || "",
         phone: user?.phone || "",
         company: user?.company || "",
+        categories: user?.categories || [] as string[],
     })
+    const [availableProducts, setAvailableProducts] = useState<{ id: string, name: string }[]>([])
+
+    useEffect(() => {
+        const fetchCats = async () => {
+            try {
+                const data = await getProducts()
+                setAvailableProducts(data)
+            } catch (err) {
+                logger.error("Failed to fetch products for settings", { error: (err as Error).message })
+            }
+        }
+        fetchCats()
+    }, [])
 
     const handleEdit = () => {
         setFormData({
@@ -31,6 +44,7 @@ export default function SettingsPage() {
             email: user?.email || "",
             phone: user?.phone || "",
             company: user?.company || "",
+            categories: user?.categories || [],
         })
         setIsEditing(true)
     }
@@ -41,6 +55,7 @@ export default function SettingsPage() {
             email: user?.email || "",
             phone: user?.phone || "",
             company: user?.company || "",
+            categories: user?.categories || [],
         })
         setIsEditing(false)
     }
@@ -71,32 +86,12 @@ export default function SettingsPage() {
         }
     }
 
-    const handleTestWhatsApp = async () => {
-        setTestingWhatsApp(true)
-        try {
-            const response = await fetch("/api/test-whatsapp")
-            const data = await response.json()
-
-            if (data.success) {
-                toast.success("WhatsApp test message sent! Check your phone.")
-            } else {
-                toast.error(data.message || "Failed to send WhatsApp test message")
-            }
-        } catch (error) {
-            logger.error("WhatsApp test error", { error: (error as Error)?.message })
-            toast.error("Failed to test WhatsApp integration")
-        } finally {
-            setTestingWhatsApp(false)
-        }
-    }
-
     const handleConnectGoogle = async () => {
         try {
             setLoading(true)
             const provider = new GoogleAuthProvider()
             if (!auth.currentUser) throw new Error("No authenticated user session found.")
 
-            // Correct way to link a provider to an existing signed-in user
             const result = await linkWithPopup(auth.currentUser, provider)
 
             if (result.user.email) {
@@ -141,7 +136,7 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {isEditing ? (
-                        <div className="space-y-4">
+                        <div className="space-y-6">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="name">Name *</Label>
@@ -171,7 +166,7 @@ export default function SettingsPage() {
                                         placeholder="Enter your phone"
                                     />
                                 </div>
-                                <div className="space-y-2 col-span-2">
+                                <div className="space-y-2">
                                     <Label htmlFor="company">Company</Label>
                                     <Input
                                         id="company"
@@ -180,23 +175,97 @@ export default function SettingsPage() {
                                         placeholder="Enter company name (optional)"
                                     />
                                 </div>
+
+                                {user?.role === "seller" && (
+                                    <div className="space-y-4 col-span-2 mt-4 border-t pt-4">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="flex items-center gap-2 text-base font-semibold">
+                                                <Package className="h-5 w-5 text-primary" />
+                                                Products I Sell
+                                            </Label>
+                                            <span className="text-xs text-muted-foreground">
+                                                {formData.categories.length} product(s) selected
+                                            </span>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {/* Currently Selected Products */}
+                                            <div className="flex flex-wrap gap-2">
+                                                {formData.categories.map((catName) => (
+                                                    <div
+                                                        key={catName}
+                                                        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm font-medium group"
+                                                    >
+                                                        {catName}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    categories: formData.categories.filter(c => c !== catName)
+                                                                })
+                                                            }}
+                                                            className="text-primary/40 hover:text-destructive transition-colors"
+                                                            title="Remove product"
+                                                        >
+                                                            <X className="h-3.5 w-3.5" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                {formData.categories.length === 0 && (
+                                                    <p className="text-sm text-muted-foreground italic">No products selected yet. Please add products you deal in.</p>
+                                                )}
+                                            </div>
+
+                                            {/* Add New Product Selector */}
+                                            <div className="pt-2">
+                                                <Label htmlFor="add-product" className="text-xs text-muted-foreground mb-1.5 block font-medium">Add a product to your list</Label>
+                                                <div className="flex gap-2">
+                                                    <select
+                                                        id="add-product"
+                                                        className="flex h-9 w-full max-w-xs rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                                        onChange={(e) => {
+                                                            const val = e.target.value
+                                                            if (val && !formData.categories.includes(val)) {
+                                                                setFormData({
+                                                                    ...formData,
+                                                                    categories: [...formData.categories, val]
+                                                                })
+                                                            }
+                                                            e.target.value = "" // Reset select
+                                                        }}
+                                                    >
+                                                        <option value="">Select a product to add...</option>
+                                                        {availableProducts
+                                                            .filter(p => !formData.categories.includes(p.name))
+                                                            .map(p => (
+                                                                <option key={p.id} value={p.name}>{p.name}</option>
+                                                            ))
+                                                        }
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <p className="text-xs text-muted-foreground border-l-2 border-primary/30 pl-2 py-1">
+                                            Note: You will only receive inquiries for the products listed above. You can add or remove products at any time.
+                                        </p>
+                                    </div>
+                                )}
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="text-sm font-medium text-muted-foreground">Display Name</Label>
-                                <p className="text-sm text-muted-foreground bg-muted px-3 py-2 rounded-md">
-                                    {user?.displayName} (cannot be changed)
-                                </p>
+                            <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">Display Name</Label>
+                                    <p className="text-sm font-medium">{user?.displayName}</p>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">Role</Label>
+                                    <p className="text-sm font-medium capitalize">{user?.role}</p>
+                                </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label className="text-sm font-medium text-muted-foreground">Role</Label>
-                                <p className="text-sm text-muted-foreground capitalize bg-muted px-3 py-2 rounded-md">
-                                    {user?.role} (cannot be changed)
-                                </p>
-                            </div>
-
-                            <div className="flex justify-end gap-2 pt-4">
+                            <div className="flex justify-end gap-2 pt-4 border-t">
                                 <Button
                                     variant="outline"
                                     onClick={handleCancel}
@@ -207,7 +276,7 @@ export default function SettingsPage() {
                                 </Button>
                                 <Button
                                     onClick={handleSave}
-                                    disabled={loading}
+                                    disabled={loading || (user?.role === "seller" && formData.categories.length === 0)}
                                 >
                                     <Save className="mr-2 h-4 w-4" />
                                     {loading ? "Saving..." : "Save Changes"}
@@ -215,7 +284,7 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-6">
                             <div>
                                 <label className="text-sm font-medium text-muted-foreground">Name</label>
                                 <p className="font-medium text-foreground">{user?.name}</p>
@@ -242,6 +311,22 @@ export default function SettingsPage() {
                                     <div className="flex items-center gap-1.5">
                                         <p className="font-medium text-foreground">{user.company}</p>
                                         {user.verified && <BadgeCheck className="h-4 w-4 text-blue-500" />}
+                                    </div>
+                                </div>
+                            )}
+                            {user?.role === "seller" && (
+                                <div className="col-span-2">
+                                    <label className="text-sm font-medium text-muted-foreground">Product Categories</label>
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {user.categories && user.categories.length > 0 ? (
+                                            user.categories.map((cat) => (
+                                                <span key={cat} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                                                    {cat}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground italic">No categories selected</p>
+                                        )}
                                     </div>
                                 </div>
                             )}

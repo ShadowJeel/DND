@@ -4,21 +4,21 @@ import { collection, getDocs } from "firebase/firestore"
 import { db } from "../lib/firebase"
 
 type ProductOption = {
-    id: number;
+    id: string;
     option_name: string;
     option_type: 'text' | 'number' | 'dropdown' | 'checkbox';
     dropdown_values?: string[];
 };
 
 type Product = {
-    product_id: number;
+    product_id: string;
     name: string;
     product_options?: ProductOption[];
 };
 
 export function ProductDetails() {
     const [products, setProducts] = useState<Product[]>([])
-    const [selectedProductId, setSelectedProductId] = useState<number | "">("")
+    const [selectedProductId, setSelectedProductId] = useState<string>("")
 
     useEffect(() => {
         const fetchData = async () => {
@@ -26,23 +26,26 @@ export function ProductDetails() {
                 const productsSnap = await getDocs(collection(db, 'products'));
                 const productsList: Product[] = [];
                 for (const p of productsSnap.docs) {
-                    const data = p.data() as Product;
-                    data.product_id = parseInt(p.id) || data.product_id;
+                    const data = p.data() as any;
+                    const productId = data.product_id?.toString() || p.id;
                     const optsSnap = await getDocs(collection(db, "product_options"));
                     const options: ProductOption[] = [];
                     optsSnap.docs.forEach(o => {
                         const od = o.data();
-                        if (od.product_id === data.product_id) {
+                        if (String(od.product_id) === String(productId)) {
                             options.push({
-                                id: od.id,
+                                id: o.id,
                                 option_name: od.option_name,
                                 option_type: od.option_type,
-                                dropdown_values: od.dropdown_values
+                                dropdown_values: od.dropdown_values || []
                             })
                         }
                     });
-                    data.product_options = options;
-                    productsList.push(data);
+                    productsList.push({
+                        product_id: productId,
+                        name: data.name || "Unnamed Product",
+                        product_options: options
+                    });
                 }
                 productsList.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
                 setProducts(productsList);
@@ -72,7 +75,7 @@ export function ProductDetails() {
                                 <select
                                     value={selectedProductId}
                                     onChange={(e) => {
-                                        setSelectedProductId(Number(e.target.value));
+                                        setSelectedProductId(e.target.value);
                                     }}
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                 >

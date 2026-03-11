@@ -1,5 +1,5 @@
 import { logger } from "@/lib/logger"
-import { createInquiry, getAllSellerPhones, getInquiriesByBuyerId, getOpenInquiries } from "@/lib/store"
+import { createInquiry, getAllSellerPhones, getInquiriesByBuyerId, getOpenInquiries, getSellerPhonesByCategories } from "@/lib/store"
 import { notifySellerOfNewInquiryEmail, notifySellersOfBiddingEmail } from "@/lib/email"
 import { notifySellerOfNewInquirySMS, notifySellersOfBiddingSMS } from "@/lib/sms"
 import { getUserById } from "@/lib/store"
@@ -39,16 +39,16 @@ export async function POST(req: Request) {
 
     // No longer creating inquiry here directly. Client provides inquiryId.
 
-    // Send notifications to all sellers about new inquiry
+    // Send notifications to targeted sellers about new inquiry
     try {
-      const sellerPhones = await getAllSellerPhones()
-      // We need emails too, but getAllSellerPhones only gets phones. Let's adjust to get sellers.
-      // Alternatively, we can just use the phones for SMS for now, but Email is better.
-      // Let's import getAllVerifiedSellers if we had it. For now, we'll try to get all users or adjust the logic.
-      // Since `getAllSellerPhones` exists, I will assume we should get the full user objects if we want emails,
-      // but for brevity I will send SMS first and then try to get emails.
+      const categories = Array.from(new Set(items.map((item: any) => item.product))) as string[]
+      const sellerPhones = await getSellerPhonesByCategories(categories)
 
-      logger.info("New inquiry created client-side, sending notifications", { inquiryId, sellerCount: sellerPhones.length })
+      logger.info("New inquiry created, sending targeted notifications", {
+        inquiryId,
+        categories,
+        targetedSellerCount: sellerPhones.length
+      })
 
       if (sellerPhones.length > 0) {
         logger.debug("Seller phones for inquiry notification", { sellerPhones })
@@ -65,9 +65,9 @@ export async function POST(req: Request) {
         }
 
         // Send notifications in parallel
-        const promises = sellerPhones.map(phone => {
+        const promises = sellerPhones.map((phone: string) => {
           if (biddingDuration) {
-            return notifySellersOfBiddingSMS(phone, inquiryId).catch(e => false); // Simplified for now since SMS takes to, inquiryId
+            return notifySellersOfBiddingSMS(phone, inquiryId).catch(e => false);
           } else {
             return notifySellerOfNewInquirySMS(phone).catch(e => false);
           }
@@ -75,8 +75,8 @@ export async function POST(req: Request) {
 
         const results = await Promise.allSettled(promises)
 
-        const successful = results.filter(r => r.status === 'fulfilled' && r.value === true).length
-        const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && r.value === false)).length
+        const successful = results.filter((r: any) => r.status === 'fulfilled' && r.value === true).length
+        const failed = results.filter((r: any) => r.status === 'rejected' || (r.status === 'fulfilled' && r.value === false)).length
 
         logger.info("New inquiry notifications complete", { successful, failed })
         if (failed > 0) {

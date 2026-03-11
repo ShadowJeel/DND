@@ -3,26 +3,26 @@ import { collection, getDocs, doc, writeBatch } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 type ProductOption = {
-    id?: number;
+    id?: string;
     option_name: string;
     option_type: 'text' | 'number' | 'dropdown' | 'checkbox';
     dropdown_values?: string[];
 };
 
 type Product = {
-    product_id: number;
+    product_id: string;
     name: string;
     product_options?: ProductOption[];
 };
 
 const PREDEFINED_OPTIONS = [
     "Manufacturer", "Grade", "Outer Diameter", "Diameter", "Thickness", "Coating",
-    "Quantity", "Top paint type", "Top Color Shade", "Width", "Length", "Nominal Bore", "Dimensions", "Shape"
+    "Quantity", "Top paint type", "Top Color Shade", "Width", "Length", "Nominal Bore", "Dimensions", "Shape", "Dimension with Thickness","Nominal Bore (NB)-Outer Diameter (OD)-Thickness Combined"
 ];
 
 export function Categories() {
     const [products, setProducts] = useState<Product[]>([]);
-    const [newCategoryProductId, setNewCategoryProductId] = useState<number | ''>('');
+    const [newCategoryProductId, setNewCategoryProductId] = useState<string>('');
     const [loading, setLoading] = useState(false);
 
     // State for managing currently drafted options before saving. 
@@ -38,25 +38,30 @@ export function Categories() {
             const productsSnap = await getDocs(collection(db, "products"));
             const productsList: Product[] = [];
             for (const p of productsSnap.docs) {
-                const data = p.data() as Product;
-                data.product_id = parseInt(p.id) || data.product_id;
+                const data = p.data() as any;
+                const productId = data.product_id?.toString() || p.id;
 
-                // Fetch product options manually
+                // Fetch product options for this specific product
                 const optsSnap = await getDocs(collection(db, "product_options"));
                 const options: ProductOption[] = [];
                 optsSnap.docs.forEach(o => {
                     const od = o.data();
-                    if (od.product_id === data.product_id) {
+                    // Ensure string comparison for product_id
+                    if (String(od.product_id) === String(productId)) {
                         options.push({
-                            id: od.id,
+                            id: o.id,
                             option_name: od.option_name,
                             option_type: od.option_type,
-                            dropdown_values: od.dropdown_values
+                            dropdown_values: od.dropdown_values || []
                         })
                     }
                 });
-                data.product_options = options;
-                productsList.push(data);
+
+                productsList.push({
+                    product_id: productId,
+                    name: data.name || "Unnamed Product",
+                    product_options: options
+                });
             }
 
             // Re-sort correctly
@@ -115,7 +120,8 @@ export function Categories() {
             const batch = writeBatch(db);
             let deletedCount = 0;
             snap.docs.forEach(d => {
-                if (d.data().product_id === newCategoryProductId) {
+                // Ensure string comparison
+                if (String(d.data().product_id) === String(newCategoryProductId)) {
                     batch.delete(d.ref)
                     deletedCount++;
                 }
@@ -163,7 +169,7 @@ export function Categories() {
                         <select
                             value={newCategoryProductId}
                             onChange={(e) => {
-                                const newId = Number(e.target.value);
+                                const newId = e.target.value;
                                 setNewCategoryProductId(newId);
 
                                 // Update draft options for the newly selected product
@@ -215,7 +221,8 @@ export function Categories() {
                                             <div className="font-medium text-foreground mb-3">{optionName}</div>
                                             <div className="flex flex-wrap gap-4">
                                                 {(['text', 'number', 'dropdown', 'checkbox'] as const).map(type => {
-                                                    const isChecked = activeTypes.some(opt => opt.option_type === type);
+                                                    const activeOpt = activeTypes.find(opt => opt.option_type === type);
+                                                    const isChecked = !!activeOpt;
                                                     const labels = {
                                                         text: 'Text Input',
                                                         number: 'Number Input',

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { ArrowLeft, Building2, CheckCircle2, CreditCard, Factory, FileText, Loader2, ShieldCheck, Upload, User, XCircle } from "lucide-react"
+import { ArrowLeft, Building2, CheckCircle2, CreditCard, Factory, FileText, Loader2, Package, ShieldCheck, Upload, User, XCircle } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useRef, useState } from "react"
@@ -15,6 +15,8 @@ import { createUserWithEmailAndPassword } from "firebase/auth"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { logger } from "@/lib/logger"
 import { useAuth } from "@/lib/auth-context"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useEffect } from "react"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -29,6 +31,8 @@ export default function RegisterPage() {
   const [uploadingFile, setUploadingFile] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploadedFilePath, setUploadedFilePath] = useState("")
+  const [products, setProducts] = useState<{ id: string, name: string }[]>([])
+  const [fetchingProducts, setFetchingProducts] = useState(false)
   const [gstDetails, setGstDetails] = useState<{
     gstin: string
     legalName?: string
@@ -49,7 +53,24 @@ export default function RegisterPage() {
     aadhaarNumber: "",
     gstin: "",
     documentPath: "",
+    selectedCategories: [] as string[],
   })
+
+  useEffect(() => {
+    const fetchCats = async () => {
+      setFetchingProducts(true)
+      try {
+        const { getProducts } = await import("@/lib/store")
+        const data = await getProducts()
+        setProducts(data)
+      } catch (err) {
+        logger.error("Failed to fetch products for registration", { error: (err as Error).message })
+      } finally {
+        setFetchingProducts(false)
+      }
+    }
+    fetchCats()
+  }, [])
 
   const updateForm = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
@@ -134,10 +155,12 @@ export default function RegisterPage() {
     }
     setLoading(true)
     try {
+      const { selectedCategories, ...payload } = form
       const success = await register({
-        ...form,
+        ...payload,
         verificationType: form.entityType === "company" ? "gst" : "aadhar",
-      })
+        categories: form.role === "seller" ? form.selectedCategories : [],
+      } as any)
       if (!success) {
         toast.error("Registration failed")
         return
@@ -158,6 +181,7 @@ export default function RegisterPage() {
     setVerificationError("")
     setGstDetails(null)
     setMaskedAadhaar("")
+    setForm((prev) => ({ ...prev, selectedCategories: [] }))
   }
 
   const handleEntityTypeChange = (entityType: string) => {
@@ -251,11 +275,16 @@ export default function RegisterPage() {
                     ? "Enter your personal details"
                     : step === 4
                       ? `Verify your ${form.entityType === "company" ? "GSTIN" : "Aadhaar"}`
-                      : "Upload verification document"}
+                      : step === 5
+                        ? "Upload verification document"
+                        : "Select product categories"}
             </CardDescription>
             <div className="mt-4 flex items-center justify-center gap-2">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <div key={s} className={`h-2 w-8 rounded-full ${s <= step ? "bg-primary" : "bg-muted"}`} />
+              {[1, 2, 3, 4, 5, 6].map((s) => (
+                // Hide step 6 visually if not a seller
+                (s < 6 || form.role === 'seller') && (
+                  <div key={s} className={`h-2 w-8 rounded-full ${s <= step ? "bg-primary" : "bg-muted"}`} />
+                )
               ))}
             </div>
           </CardHeader>
@@ -651,9 +680,78 @@ export default function RegisterPage() {
                         toast.error("Please upload the required document")
                         return
                       }
-                      await handleSubmit()
+                      if (form.role === "seller") {
+                        setStep(6)
+                      } else {
+                        await handleSubmit()
+                      }
                     }}
                     disabled={!uploadedFile || uploadingFile || loading}
+                  >
+                    {form.role === "seller" ? "Continue" : loading ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finalizing...</>
+                    ) : (
+                      "Complete Registration"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 6: Category Selection (Sellers Only) */}
+            {step === 6 && form.role === "seller" && (
+              <div className="flex flex-col gap-6">
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
+                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                    <Package className="h-4 w-4 text-primary" />
+                    Product Categories
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Select at least one category you deal in. You will receive inquiries for these products.
+                  </p>
+                </div>
+
+                <div className="grid gap-3 max-h-[300px] overflow-y-auto px-1">
+                  {fetchingProducts ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : products.map((product) => (
+                    <div
+                      key={product.id}
+                      className={`flex items-start gap-3 rounded-lg border p-4 transition-all cursor-pointer ${form.selectedCategories.includes(product.name) ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}
+                      onClick={() => {
+                        const current = form.selectedCategories
+                        if (current.includes(product.name)) {
+                          setForm(prev => ({ ...prev, selectedCategories: current.filter(c => c !== product.name) }))
+                        } else {
+                          setForm(prev => ({ ...prev, selectedCategories: [...current, product.name] }))
+                        }
+                      }}
+                    >
+                      <Checkbox
+                        id={`cat-${product.id}`}
+                        checked={form.selectedCategories.includes(product.name)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <Label
+                          htmlFor={`cat-${product.id}`}
+                          className="cursor-pointer text-sm font-medium text-foreground"
+                        >
+                          {product.name}
+                        </Label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex gap-3 mt-2">
+                  <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep(5)}>Back</Button>
+                  <Button
+                    className="flex-1"
+                    onClick={handleSubmit}
+                    disabled={loading || form.selectedCategories.length === 0}
                   >
                     {loading ? (
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finalizing...</>

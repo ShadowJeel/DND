@@ -3,21 +3,21 @@ import { db } from '../lib/firebase';
 import { collection, getDocs, doc, updateDoc, query, where } from 'firebase/firestore';
 
 type ProductOption = {
-    id?: number;
+    id?: string;
     option_name: string;
     option_type: 'text' | 'number' | 'dropdown' | 'checkbox';
     dropdown_values?: string[];
 };
 
 type Product = {
-    product_id: number;
+    product_id: string;
     name: string;
     product_options?: ProductOption[];
 };
 
 export function AddDetails() {
     const [products, setProducts] = useState<Product[]>([]);
-    const [selectedProductId, setSelectedProductId] = useState<number | ''>('');
+    const [selectedProductId, setSelectedProductId] = useState<string>('');
 
     useEffect(() => {
         fetchData();
@@ -28,23 +28,26 @@ export function AddDetails() {
             const productsSnap = await getDocs(collection(db, 'products'));
             const productsList: Product[] = [];
             for (const p of productsSnap.docs) {
-                const data = p.data() as Product;
-                data.product_id = parseInt(p.id) || data.product_id;
+                const data = p.data() as any;
+                const productId = data.product_id?.toString() || p.id;
                 const optsSnap = await getDocs(collection(db, "product_options"));
                 const options: ProductOption[] = [];
                 optsSnap.docs.forEach(o => {
                     const od = o.data();
-                    if (od.product_id === data.product_id) {
+                    if (String(od.product_id) === String(productId)) {
                         options.push({
-                            id: od.id,
+                            id: o.id,
                             option_name: od.option_name,
                             option_type: od.option_type,
-                            dropdown_values: od.dropdown_values
+                            dropdown_values: od.dropdown_values || []
                         })
                     }
                 });
-                data.product_options = options;
-                productsList.push(data);
+                productsList.push({
+                    product_id: productId,
+                    name: data.name || "Unnamed Product",
+                    product_options: options
+                });
             }
             productsList.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
             const data = productsList;
@@ -58,17 +61,34 @@ export function AddDetails() {
         }
     };
 
-    const handleAddDropdownValue = async (productId: number, optionName: string, newValue: string) => {
+    const handleAddDropdownValue = async (productId: string, optionName: string, newValue: string) => {
         if (!newValue.trim()) return;
+
+        // Split by comma and clean up each value
+        const newValues = newValue.split(',')
+            .map(val => val.trim())
+            .filter(val => val !== '');
+
+        if (newValues.length === 0) return;
 
         const product = products.find(p => p.product_id === productId);
         const option = product?.product_options?.find(o => o.option_name === optionName);
         if (!option) return;
 
         const currentValues = option.dropdown_values || [];
-        if (currentValues.includes(newValue.trim())) return;
 
-        const updatedValues = [...currentValues, newValue.trim()];
+        // Flatten any existing comma-separated strings first
+        const flattenedCurrent = currentValues
+            .flatMap(v => v.split(',').map(s => s.trim()))
+            .filter(v => v !== '');
+
+        // Filter out values that already exist
+        const valuesToAdd = newValues.filter(val => !flattenedCurrent.includes(val));
+
+        // If there are no new values to add AND the existing values were already flat, no need to update
+        if (valuesToAdd.length === 0 && flattenedCurrent.length === currentValues.length) return;
+
+        const updatedValues = [...flattenedCurrent, ...valuesToAdd];
 
         try {
             const q = query(collection(db, 'product_options'), where('product_id', '==', productId), where('option_name', '==', optionName));
@@ -78,18 +98,22 @@ export function AddDetails() {
             }
             await fetchData();
         } catch (error: any) {
-            console.error('Error adding dropdown value:', error);
-            alert('Failed to add value');
+            console.error('Error adding dropdown values:', error);
+            alert('Failed to add values');
         }
     };
 
-    const handleRemoveDropdownValue = async (productId: number, optionName: string, valueToRemove: string) => {
+    const handleRemoveDropdownValue = async (productId: string, optionName: string, valueToRemove: string) => {
         const product = products.find(p => p.product_id === productId);
         const option = product?.product_options?.find(o => o.option_name === optionName);
         if (!option) return;
 
         const currentValues = option.dropdown_values || [];
-        const updatedValues = currentValues.filter(v => v !== valueToRemove);
+
+        // Flatten any existing comma-separated strings first, then filter out the one to remove
+        const updatedValues = currentValues
+            .flatMap(v => v.split(',').map(s => s.trim()))
+            .filter(v => v !== '' && v !== valueToRemove);
 
         try {
             const q = query(collection(db, 'product_options'), where('product_id', '==', productId), where('option_name', '==', optionName));
@@ -117,7 +141,7 @@ export function AddDetails() {
                         <label className="text-sm font-medium">Select Product</label>
                         <select
                             value={selectedProductId}
-                            onChange={(e) => setSelectedProductId(Number(e.target.value))}
+                            onChange={(e) => setSelectedProductId(e.target.value)}
                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                             <option value="" disabled>Select a product...</option>
@@ -153,18 +177,21 @@ export function AddDetails() {
                                         <h4 className="font-medium text-foreground mb-3">{opt.option_name} Choices</h4>
 
                                         <div className="flex flex-wrap gap-2 mb-4">
-                                            {(opt.dropdown_values || []).map((val, idx) => (
-                                                <div key={idx} className="flex items-center gap-1 bg-background border px-2 py-1 rounded-md text-sm shadow-sm">
-                                                    {val}
-                                                    <button
-                                                        onClick={() => handleRemoveDropdownValue(selectedProductId as number, opt.option_name, val)}
-                                                        className="text-muted-foreground hover:text-destructive ml-1 focus-visible:outline-none"
-                                                        title="Remove"
-                                                    >
-                                                        &times;
-                                                    </button>
-                                                </div>
-                                            ))}
+                                            {(opt.dropdown_values || [])
+                                                .flatMap(v => v.split(',').map(s => s.trim()))
+                                                .filter(v => v !== '')
+                                                .map((val, idx) => (
+                                                    <div key={idx} className="flex items-center gap-1 bg-background border px-2 py-1 rounded-md text-sm shadow-sm">
+                                                        {val}
+                                                        <button
+                                                            onClick={() => handleRemoveDropdownValue(selectedProductId, opt.option_name, val)}
+                                                            className="text-muted-foreground hover:text-destructive ml-1 focus-visible:outline-none"
+                                                            title="Remove"
+                                                        >
+                                                            &times;
+                                                        </button>
+                                                    </div>
+                                                ))}
                                             {(!opt.dropdown_values || opt.dropdown_values.length === 0) && (
                                                 <span className="text-sm text-muted-foreground italic py-1">No choices added yet.</span>
                                             )}
@@ -179,7 +206,7 @@ export function AddDetails() {
                                                 onKeyDown={(e) => {
                                                     if (e.key === 'Enter') {
                                                         e.preventDefault();
-                                                        handleAddDropdownValue(selectedProductId as number, opt.option_name, e.currentTarget.value);
+                                                        handleAddDropdownValue(selectedProductId, opt.option_name, e.currentTarget.value);
                                                         e.currentTarget.value = '';
                                                     }
                                                 }}
@@ -189,7 +216,7 @@ export function AddDetails() {
                                                 onClick={() => {
                                                     const input = document.getElementById(`new-val-${opt.option_name}`) as HTMLInputElement;
                                                     if (input) {
-                                                        handleAddDropdownValue(selectedProductId as number, opt.option_name, input.value);
+                                                        handleAddDropdownValue(selectedProductId, opt.option_name, input.value);
                                                         input.value = '';
                                                     }
                                                 }}
