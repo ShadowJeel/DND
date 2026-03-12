@@ -1,0 +1,13 @@
+[2026-03-11T04:20:56.298Z] ERROR Failed to send welcome notifications {"error":"getaddrinfo ENOTFOUND smtp.example.com"}
+[2026-03-11T04:20:56.294Z] ERROR Failed to send email {"error":"getaddrinfo ENOTFOUND smtp.example.com","to":"[redacted-email]"}
+[2026-03-11T04:21:53.946Z] INFO New inquiry created, sending targeted notifications {"inquiryId":"INQ-0002","categories":["Cement"],"targetedSellerCount":0}
+[2026-03-11T04:21:53.948Z] WARN No verified sellers found for inquiry notification
+[2026-03-11T04:23:35.563Z] ERROR Failed to send welcome notifications {"error":"getaddrinfo ENOTFOUND smtp.example.com"}
+[2026-03-11T04:23:35.562Z] ERROR Failed to send email {"error":"getaddrinfo ENOTFOUND smtp.example.com","to":"[redacted-email]"}
+[2026-03-11T04:24:26.989Z] INFO New offer submitted {"inquiryId":"INQ-0002"}
+[2026-03-11T04:24:27.340Z] ERROR Failed to send notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-03-11T04:25:33.573Z] ERROR Failed to send email {"error":"getaddrinfo ENOTFOUND smtp.example.com","to":"[redacted-email]"}
+[2026-03-11T04:25:33.573Z] ERROR Failed to send login Email {"error":"getaddrinfo ENOTFOUND smtp.example.com"}
+[2026-03-11T04:25:33.795Z] INFO SMS sent successfully via MSG91 {"data":{"message":"The provided flow ID or template ID is invalid.","type":"error"}}
+[2026-03-11T04:25:49.687Z] INFO Accepted offer routine started {"offerId":"OFR-0002"}
+[2026-03-11T04:25:49.838Z] ERROR Failed to send notification for acceptance {"error":"Missing or insufficient permissions."}

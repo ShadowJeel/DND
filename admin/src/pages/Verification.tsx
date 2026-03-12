@@ -55,6 +55,16 @@ export function Verification() {
         }
     };
 
+    const getCertificateUrl = (path: string) => {
+        if (!path) return '';
+        // If it's already a full URL (legacy/existing data), return it as is
+        if (path.startsWith('http')) return path;
+
+        // Otherwise construct the Firebase Storage URL
+        const bucket = import.meta.env.VITE_FIREBASE_STORAGE_BUCKET;
+        return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/documents%2F${encodeURIComponent(path)}?alt=media`;
+    };
+
     const handleAccept = async (user: UserData) => {
         if (!window.confirm(`Are you sure you want to verify ${user.name}?`)) return;
 
@@ -265,7 +275,7 @@ export function Verification() {
                                                 <div className="font-mono text-sm font-medium bg-background border border-border px-3 py-1.5 rounded-md inline-block">{selectedUser.gstin}</div>
                                                 {selectedUser.gst_certificate_path && (
                                                     <a
-                                                        href={`https://firebasestorage.googleapis.com/v0/b/${import.meta.env.VITE_FIREBASE_STORAGE_BUCKET}/o/documents%2F${encodeURIComponent(selectedUser.gst_certificate_path)}?alt=media`}
+                                                        href={getCertificateUrl(selectedUser.gst_certificate_path)}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="flex items-center gap-2 text-sm text-primary hover:underline mt-2"
@@ -286,7 +296,7 @@ export function Verification() {
                                                 <div className="font-mono text-sm font-medium bg-background border border-border px-3 py-1.5 rounded-md inline-block">{selectedUser.aadhaar_number}</div>
                                                 {selectedUser.aadhaar_document_path && (
                                                     <a
-                                                        href={`https://firebasestorage.googleapis.com/v0/b/${import.meta.env.VITE_FIREBASE_STORAGE_BUCKET}/o/documents%2F${encodeURIComponent(selectedUser.aadhaar_document_path)}?alt=media`}
+                                                        href={getCertificateUrl(selectedUser.aadhaar_document_path)}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         className="flex items-center gap-2 text-sm text-primary hover:underline mt-2"

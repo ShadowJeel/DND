@@ -19,7 +19,9 @@ interface AuthUser {
   gstCertificateName?: string
   verified: boolean
   googleConnected: boolean
+  createdAt: string;
   categories?: string[]
+  smsNotificationsEnabled: boolean;
 }
 
 interface AuthContextType {
@@ -192,6 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         categories: payload.categories
           ? (typeof payload.categories === 'string' ? JSON.parse(payload.categories) : payload.categories)
           : undefined,
+        smsNotificationsEnabled: true,
       })
     } catch (e: any) {
       logger.error("Native Firestore profile creation failed", { error: e.message })

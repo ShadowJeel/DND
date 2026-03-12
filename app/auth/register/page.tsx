@@ -239,8 +239,8 @@ export default function RegisterPage() {
       const downloadURL = await getDownloadURL(snapshot.ref)
 
       setUploadedFile(file)
-      setUploadedFilePath(downloadURL)
-      setForm((prev) => ({ ...prev, documentPath: downloadURL }))
+      setUploadedFilePath(fileName)
+      setForm((prev) => ({ ...prev, documentPath: fileName }))
       toast.success("Document uploaded successfully!")
 
     } catch (error: any) {

@@ -148,7 +148,11 @@ export async function PATCH(req: Request) {
             await notifySellerOfAcceptanceEmail(seller.email, offer.id).catch(e => logger.error("Email seller acceptance failed", { error: (e as Error).message }))
           }
           if (seller.phone && seller.phone.trim() !== "") {
-            await notifySellerOfAcceptanceSMS(seller.phone, offer.id).catch(e => logger.error("SMS seller acceptance failed", { error: (e as Error).message }))
+            if (seller.smsNotificationsEnabled) {
+              await notifySellerOfAcceptanceSMS(seller.phone, offer.id).catch(e => logger.error("SMS seller acceptance failed", { error: (e as Error).message }))
+            } else {
+              logger.info("Skipping SMS notification for seller as it is disabled in profile", { sellerId: seller.id })
+            }
           }
           logger.info("Acceptance notifications sent to seller")
 

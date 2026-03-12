@@ -23,6 +23,7 @@ export default function SettingsPage() {
         phone: user?.phone || "",
         company: user?.company || "",
         categories: user?.categories || [] as string[],
+        smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
     })
     const [availableProducts, setAvailableProducts] = useState<{ id: string, name: string }[]>([])
 
@@ -45,6 +46,7 @@ export default function SettingsPage() {
             phone: user?.phone || "",
             company: user?.company || "",
             categories: user?.categories || [],
+            smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
         })
         setIsEditing(true)
     }
@@ -56,6 +58,7 @@ export default function SettingsPage() {
             phone: user?.phone || "",
             company: user?.company || "",
             categories: user?.categories || [],
+            smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
         })
         setIsEditing(false)
     }
@@ -254,6 +257,32 @@ export default function SettingsPage() {
                                 )}
                             </div>
 
+                            <div className="space-y-4 border-t pt-4">
+                                <Label className="text-base font-semibold">Notification Preferences</Label>
+                                <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-sm font-medium">SMS Notifications</Label>
+                                        <p className="text-xs text-muted-foreground">
+                                            Receive SMS alerts for important activity (e.g., when your offer is accepted).
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <button
+                                            type="button"
+                                            role="switch"
+                                            aria-checked={formData.smsNotificationsEnabled}
+                                            onClick={() => setFormData({ ...formData, smsNotificationsEnabled: !formData.smsNotificationsEnabled })}
+                                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${formData.smsNotificationsEnabled ? 'bg-primary' : 'bg-input'}`}
+                                        >
+                                            <span
+                                                aria-hidden="true"
+                                                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow ring-0 transition duration-200 ease-in-out ${formData.smsNotificationsEnabled ? 'translate-x-5' : 'translate-x-0'}`}
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4 border-t pt-4">
                                 <div className="space-y-1">
                                     <Label className="text-xs text-muted-foreground">Display Name</Label>
@@ -330,6 +359,19 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                             )}
+
+                            <div className="col-span-2 border-t pt-4">
+                                <label className="text-sm font-medium text-muted-foreground">Notification Preferences</label>
+                                <div className="mt-2 flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                                    <div className="space-y-0.5">
+                                        <p className="text-sm font-medium">SMS Notifications</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            {user?.smsNotificationsEnabled ? "Enabled" : "Disabled"}
+                                        </p>
+                                    </div>
+                                    <div className={`h-2.5 w-2.5 rounded-full ${user?.smsNotificationsEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
+                                </div>
+                            </div>
                         </div>
                     )}
                 </CardContent>

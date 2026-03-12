@@ -26,6 +26,7 @@ export interface User {
   googleConnected: boolean
   createdAt: string
   categories?: string[]
+  smsNotificationsEnabled: boolean
 }
 
 export interface InquiryItem {
@@ -88,6 +89,7 @@ function mapBuyerFromDb(row: any, id: string): User {
     verified: Boolean(row.verified),
     googleConnected: Boolean(row.google_connected),
     createdAt: row.created_at,
+    smsNotificationsEnabled: row.sms_notifications_enabled !== false, // default to true
   }
 }
 
@@ -111,6 +113,7 @@ function mapSellerFromDb(row: any, id: string): User {
     googleConnected: Boolean(row.google_connected),
     createdAt: row.created_at,
     categories: row.categories || [],
+    smsNotificationsEnabled: row.sms_notifications_enabled !== false, // default to true
   }
 }
 
@@ -261,6 +264,7 @@ export async function registerUser(data: Omit<User, "id" | "verified" | "created
       google_connected: false,
       created_at: createdAt,
       auth_uid: auth.currentUser?.uid || null,
+      sms_notifications_enabled: true,
     })
 
     return {
@@ -281,6 +285,7 @@ export async function registerUser(data: Omit<User, "id" | "verified" | "created
       verified: false,
       googleConnected: false,
       createdAt,
+      smsNotificationsEnabled: true,
     }
   } else {
     const id = await getNextSellerId()
@@ -304,6 +309,7 @@ export async function registerUser(data: Omit<User, "id" | "verified" | "created
       created_at: createdAt,
       auth_uid: auth.currentUser?.uid || null,
       categories: data.categories || [],
+      sms_notifications_enabled: true,
     })
 
     return {
@@ -325,6 +331,7 @@ export async function registerUser(data: Omit<User, "id" | "verified" | "created
       googleConnected: false,
       createdAt,
       categories: data.categories || [],
+      smsNotificationsEnabled: true,
     }
   }
 }
@@ -912,6 +919,7 @@ export interface UpdateUserData {
   phone?: string
   company?: string
   categories?: string[]
+  smsNotificationsEnabled?: boolean
 }
 
 export async function updateUser(userId: string, updates: UpdateUserData): Promise<User | null> {
@@ -921,6 +929,7 @@ export async function updateUser(userId: string, updates: UpdateUserData): Promi
   if (updates.phone !== undefined) updateData.phone = updates.phone
   if (updates.company !== undefined) updateData.company = updates.company
   if (updates.categories !== undefined) updateData.categories = updates.categories
+  if (updates.smsNotificationsEnabled !== undefined) updateData.sms_notifications_enabled = updates.smsNotificationsEnabled
 
   try {
     if (userId.startsWith("BUY-")) {
