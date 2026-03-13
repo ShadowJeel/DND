@@ -6,6 +6,7 @@ import { CheckCircle2, XCircle, FileText, User, Building, Phone, Mail, FileBadge
 type UserData = {
     id: string;
     name: string;
+    display_name?: string;
     email: string;
     phone: string;
     company: string;
@@ -24,6 +25,8 @@ export function Verification() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'pending' | 'verified'>('pending');
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editForm, setEditForm] = useState<Partial<UserData>>({});
 
     useEffect(() => {
         fetchUsers();
@@ -95,6 +98,41 @@ export function Verification() {
         }
     };
 
+    const handleUpdateUser = async () => {
+        if (!selectedUser) return;
+
+        try {
+            const table = selectedUser.role === 'buyer' ? 'buyers' : 'sellers';
+            const updates = {
+                name: editForm.name || selectedUser.name,
+                display_name: editForm.display_name,
+                phone: editForm.phone || selectedUser.phone,
+                company: editForm.company || selectedUser.company,
+            };
+
+            await updateDoc(doc(db, table, selectedUser.id), updates);
+
+            setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...updates } : u));
+            setSelectedUser({ ...selectedUser, ...updates });
+            setIsEditing(false);
+            alert('User profile updated successfully.');
+        } catch (error) {
+            console.error('Error updating user:', error);
+            alert('Failed to update user profile.');
+        }
+    };
+
+    const startEditing = () => {
+        if (!selectedUser) return;
+        setEditForm({
+            name: selectedUser.name,
+            display_name: selectedUser.display_name || '',
+            phone: selectedUser.phone,
+            company: selectedUser.company,
+        });
+        setIsEditing(true);
+    };
+
     const displayedUsers = users.filter(u => activeTab === 'pending' ? !u.verified : u.verified);
 
     return (
@@ -149,6 +187,9 @@ export function Verification() {
                                     <tr key={user.id} className="hover:bg-muted/50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="font-semibold text-foreground">{user.name}</div>
+                                            {user.display_name && (
+                                                <div className="text-xs text-muted-foreground mt-0.5">As: {user.display_name}</div>
+                                            )}
                                             <div className="text-xs mt-1 uppercase tracking-wider text-muted-foreground px-2 py-0.5 rounded-full border border-border bg-background inline-block">
                                                 {user.role}
                                             </div>
@@ -192,7 +233,10 @@ export function Verification() {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <button
-                                                onClick={() => setSelectedUser(user)}
+                                                onClick={() => {
+                                                    setSelectedUser(user);
+                                                    setIsEditing(false);
+                                                }}
                                                 className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-4 transition-colors"
                                             >
                                                 View Details
@@ -214,8 +258,8 @@ export function Verification() {
                             <div>
                                 <h3 className="text-xl font-bold flex items-center gap-2">
                                     <User className="h-5 w-5 text-primary" />
-                                    {selectedUser.name}
-                                    {selectedUser.verified && (
+                                    {isEditing ? 'Edit Profile' : selectedUser.name}
+                                    {selectedUser.verified && !isEditing && (
                                         <span className="ml-2 inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-1 text-xs font-medium text-emerald-600 border border-emerald-500/20">
                                             <CheckCircle2 className="h-3 w-3" /> Verified
                                         </span>
@@ -224,7 +268,10 @@ export function Verification() {
                                 <p className="text-sm text-muted-foreground mt-1 capitalize">{selectedUser.role} Account • Joined {new Date(selectedUser.created_at).toLocaleDateString()}</p>
                             </div>
                             <button
-                                onClick={() => setSelectedUser(null)}
+                                onClick={() => {
+                                    setSelectedUser(null);
+                                    setIsEditing(false);
+                                }}
                                 className="h-8 w-8 inline-flex items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground text-muted-foreground"
                             >
                                 <XCircle className="h-5 w-5" />
@@ -232,111 +279,185 @@ export function Verification() {
                         </div>
 
                         <div className="p-6 overflow-y-auto space-y-6 flex-1">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {isEditing ? (
                                 <div className="space-y-4">
-                                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border">Contact Information</h4>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <div className="text-xs text-muted-foreground mb-1">Email Address</div>
-                                            <div className="font-medium break-all">{selectedUser.email}</div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">Full Name</label>
+                                            <input
+                                                type="text"
+                                                value={editForm.name || ''}
+                                                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                            />
                                         </div>
-                                        <div>
-                                            <div className="text-xs text-muted-foreground mb-1">Phone Number</div>
-                                            <div className="font-medium">{selectedUser.phone}</div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">Display Name (Read-only)</label>
+                                            <input
+                                                type="text"
+                                                value={editForm.display_name || ''}
+                                                readOnly
+                                                className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm cursor-not-allowed"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">Phone</label>
+                                            <input
+                                                type="text"
+                                                value={editForm.phone || ''}
+                                                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-sm font-medium">Company</label>
+                                            <input
+                                                type="text"
+                                                value={editForm.company || ''}
+                                                onChange={(e) => setEditForm({ ...editForm, company: e.target.value })}
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                                            />
                                         </div>
                                     </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border">Business Profile</h4>
-                                    <div className="space-y-3">
-                                        <div>
-                                            <div className="text-xs text-muted-foreground mb-1">Company Name</div>
-                                            <div className="font-medium">{selectedUser.company || 'Not Provided'}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-muted-foreground mb-1">Entity Type</div>
-                                            <div className="font-medium capitalize">{selectedUser.entity_type || 'unspecified'}</div>
-                                        </div>
+                                    <div className="flex justify-end gap-3 pt-4">
+                                        <button
+                                            onClick={() => setIsEditing(false)}
+                                            className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md transition-colors"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleUpdateUser}
+                                            className="px-6 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 transition-colors"
+                                        >
+                                            Save Changes
+                                        </button>
                                     </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-4">
+                                            <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border">Contact Information</h4>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <div className="text-xs text-muted-foreground mb-1">Email Address</div>
+                                                    <div className="font-medium break-all">{selectedUser.email}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs text-muted-foreground mb-1">Display Name</div>
+                                                    <div className="font-medium">{selectedUser.display_name || 'Not Set'}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs text-muted-foreground mb-1">Phone Number</div>
+                                                    <div className="font-medium">{selectedUser.phone}</div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                            <div className="space-y-4 pt-4">
-                                <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border flex items-center gap-2">
-                                    <FileBadge2 className="h-4 w-4" /> Legal Documents
-                                </h4>
+                                        <div className="space-y-4">
+                                            <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border">Business Profile</h4>
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <div className="text-xs text-muted-foreground mb-1">Company Name</div>
+                                                    <div className="font-medium">{selectedUser.company || 'Not Provided'}</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-xs text-muted-foreground mb-1">Entity Type</div>
+                                                    <div className="font-medium capitalize">{selectedUser.entity_type || 'unspecified'}</div>
+                                                </div>
+                                                <button
+                                                    onClick={startEditing}
+                                                    className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:underline"
+                                                >
+                                                    Edit Basic Info
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="rounded-lg border border-border p-4 bg-muted/20">
-                                        <div className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">GST Information</div>
-                                        {selectedUser.gstin ? (
-                                            <div className="space-y-2">
-                                                <div className="font-mono text-sm font-medium bg-background border border-border px-3 py-1.5 rounded-md inline-block">{selectedUser.gstin}</div>
-                                                {selectedUser.gst_certificate_path && (
-                                                    <a
-                                                        href={getCertificateUrl(selectedUser.gst_certificate_path)}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center gap-2 text-sm text-primary hover:underline mt-2"
-                                                    >
-                                                        <FileText className="h-4 w-4" /> View GST Certificate
-                                                    </a>
+                                    <div className="space-y-4 pt-4">
+                                        <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground pb-2 border-b border-border flex items-center gap-2">
+                                            <FileBadge2 className="h-4 w-4" /> Legal Documents
+                                        </h4>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="rounded-lg border border-border p-4 bg-muted/20">
+                                                <div className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">GST Information</div>
+                                                {selectedUser.gstin ? (
+                                                    <div className="space-y-2">
+                                                        <div className="font-mono text-sm font-medium bg-background border border-border px-3 py-1.5 rounded-md inline-block">{selectedUser.gstin}</div>
+                                                        {selectedUser.gst_certificate_path && (
+                                                            <a
+                                                                href={getCertificateUrl(selectedUser.gst_certificate_path)}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center gap-2 text-sm text-primary hover:underline mt-2"
+                                                            >
+                                                                <FileText className="h-4 w-4" /> View GST Certificate
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-sm text-muted-foreground italic">No GST Information provided</div>
                                                 )}
                                             </div>
-                                        ) : (
-                                            <div className="text-sm text-muted-foreground italic">No GST Information provided</div>
-                                        )}
-                                    </div>
 
-                                    <div className="rounded-lg border border-border p-4 bg-muted/20">
-                                        <div className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Aadhaar Information</div>
-                                        {selectedUser.aadhaar_number ? (
-                                            <div className="space-y-2">
-                                                <div className="font-mono text-sm font-medium bg-background border border-border px-3 py-1.5 rounded-md inline-block">{selectedUser.aadhaar_number}</div>
-                                                {selectedUser.aadhaar_document_path && (
-                                                    <a
-                                                        href={getCertificateUrl(selectedUser.aadhaar_document_path)}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="flex items-center gap-2 text-sm text-primary hover:underline mt-2"
-                                                    >
-                                                        <FileText className="h-4 w-4" /> View Aadhaar Document
-                                                    </a>
+                                            <div className="rounded-lg border border-border p-4 bg-muted/20">
+                                                <div className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">Aadhaar Information</div>
+                                                {selectedUser.aadhaar_number ? (
+                                                    <div className="space-y-2">
+                                                        <div className="font-mono text-sm font-medium bg-background border border-border px-3 py-1.5 rounded-md inline-block">{selectedUser.aadhaar_number}</div>
+                                                        {selectedUser.aadhaar_document_path && (
+                                                            <a
+                                                                href={getCertificateUrl(selectedUser.aadhaar_document_path)}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="flex items-center gap-2 text-sm text-primary hover:underline mt-2"
+                                                            >
+                                                                <FileText className="h-4 w-4" /> View Aadhaar Document
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-sm text-muted-foreground italic">No Aadhaar Information provided</div>
                                                 )}
                                             </div>
-                                        ) : (
-                                            <div className="text-sm text-muted-foreground italic">No Aadhaar Information provided</div>
-                                        )}
+                                        </div>
                                     </div>
-                                </div>
-                            </div>
+                                </>
+                            )}
                         </div>
 
                         <div className="p-6 border-t border-border bg-muted/30 flex items-center justify-between gap-4 mt-auto">
                             <button
-                                onClick={() => setSelectedUser(null)}
+                                onClick={() => {
+                                    setSelectedUser(null);
+                                    setIsEditing(false);
+                                }}
                                 className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                             >
                                 Close View
                             </button>
 
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => handleReject(selectedUser)}
-                                    className="px-6 py-2 rounded-md text-sm font-medium border border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
-                                >
-                                    Reject & Delete
-                                </button>
-                                {!selectedUser.verified && (
+                            {!isEditing && (
+                                <div className="flex items-center gap-3">
                                     <button
-                                        onClick={() => handleAccept(selectedUser)}
-                                        className="px-6 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                                        onClick={() => handleReject(selectedUser)}
+                                        className="px-6 py-2 rounded-md text-sm font-medium border border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors"
                                     >
-                                        Accept & Verify
+                                        Reject & Delete
                                     </button>
-                                )}
-                            </div>
+                                    {!selectedUser.verified && (
+                                        <button
+                                            onClick={() => handleAccept(selectedUser)}
+                                            className="px-6 py-2 rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
+                                        >
+                                            Accept & Verify
+                                        </button>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

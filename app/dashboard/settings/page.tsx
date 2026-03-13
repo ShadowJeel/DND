@@ -48,7 +48,7 @@ export default function SettingsPage() {
             phone: user?.phone || "",
             company: user?.company || "",
             categories: user?.categories || [],
-            smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
+            //smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
         })
         setIsEditing(true)
     }
@@ -61,7 +61,7 @@ export default function SettingsPage() {
             phone: user?.phone || "",
             company: user?.company || "",
             categories: user?.categories || [],
-            smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
+            //smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
         })
         setIsEditing(false)
     }
@@ -291,11 +291,12 @@ export default function SettingsPage() {
 
                             <div className="grid grid-cols-2 gap-4 border-t pt-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="displayName">Display Name</Label>
+                                    <Label htmlFor="displayName">Display Name (Read-only)</Label>
                                     <Input
                                         id="displayName"
                                         value={formData.displayName}
-                                        onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                                        readOnly
+                                        className="bg-muted cursor-not-allowed"
                                         placeholder="Enter display name"
                                     />
                                 </div>
@@ -316,7 +317,7 @@ export default function SettingsPage() {
                                 </Button>
                                 <Button
                                     onClick={handleSave}
-                                    disabled={loading || (user?.role === "seller" && formData.categories.length === 0)}
+                                    disabled={loading}
                                 >
                                     <Save className="mr-2 h-4 w-4" />
                                     {loading ? "Saving..." : "Save Changes"}

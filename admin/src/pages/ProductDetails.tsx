@@ -119,7 +119,7 @@ export function ProductDetails() {
                                                 <div key={opt.id}>
                                                     <label className="text-sm font-medium mb-1.5 block">
                                                         {opt.option_name}
-                                                        {selectedProduct.product_options.filter(o => o.option_name === opt.option_name).length > 1 && (
+                                                        {((selectedProduct.product_options || []).filter(o => o.option_name === opt.option_name).length > 1) && (
                                                             <span className="ml-1 text-muted-foreground">({opt.option_type === 'number' ? 'No.' : opt.option_type === 'dropdown' ? 'Type' : opt.option_type})</span>
                                                         )}
                                                         <span className="text-red-500 ml-1">*</span>
