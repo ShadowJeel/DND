@@ -4,7 +4,6 @@ import { Inter, Space_Grotesk } from 'next/font/google'
 import { Toaster } from 'sonner'
 
 import { Providers } from "./providers"
-import { AntiInspect } from "@/components/anti-inspect"
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -26,7 +25,6 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${inter.variable} ${spaceGrotesk.variable} font-sans antialiased min-h-screen bg-background`}
       >
-        <AntiInspect />
         <Providers>{children}</Providers>
         <Toaster position="top-right" richColors />
       </body>

@@ -34,7 +34,7 @@ service cloud.firestore {
     match /buyers/{userId} {
       allow create: if true; // Registration
       allow read: if true;
-      allow update: if (isAuthenticated() && (resource.data.auth_uid == request.auth.uid || resource.data.email == request.auth.token.email || resource.data.google_email == request.auth.token.email)) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'verified', 'created_at', 'auth_uid', 'display_name']) || isAdmin();
+      allow update: if (isAuthenticated() && (resource.data.auth_uid == request.auth.uid || resource.data.email == request.auth.token.email || resource.data.google_email == request.auth.token.email)) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'verified', 'created_at', 'auth_uid', 'email']) || isAdmin();
       allow delete: if isAdmin();
     }
 
@@ -42,7 +42,7 @@ service cloud.firestore {
     match /sellers/{userId} {
       allow create: if true; // Registration
       allow read: if true;
-      allow update: if (isAuthenticated() && (resource.data.auth_uid == request.auth.uid || resource.data.email == request.auth.token.email || resource.data.google_email == request.auth.token.email)) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'verified', 'created_at', 'auth_uid', 'display_name']) || isAdmin();
+      allow update: if (isAuthenticated() && (resource.data.auth_uid == request.auth.uid || resource.data.email == request.auth.token.email || resource.data.google_email == request.auth.token.email)) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['id', 'verified', 'created_at', 'auth_uid', 'email']) || isAdmin();
       allow delete: if isAdmin();
     }
 
@@ -51,12 +51,12 @@ service cloud.firestore {
     // - Only Authenticated Admins (via Admin Portal) can modify
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
     match /product_options/{optionId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
     // Inquiries Collection
