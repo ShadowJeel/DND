@@ -1,7 +1,7 @@
 import { logger } from "@/lib/logger"
 import { createInquiry, getAllSellerPhones, getInquiriesByBuyerId, getOpenInquiries, getSellerPhonesByCategories } from "@/lib/store"
-import { notifySellerOfNewInquiryEmail, notifySellersOfBiddingEmail } from "@/lib/email"
-import { notifySellerOfNewInquirySMS, notifySellersOfBiddingSMS } from "@/lib/sms"
+// import { notifySellerOfNewInquiryEmail, notifySellersOfBiddingEmail } from "@/lib/email"
+// import { notifySellerOfNewInquirySMS, notifySellersOfBiddingSMS } from "@/lib/sms"
 import { getUserById } from "@/lib/store"
 import { NextResponse } from "next/server"
 
@@ -39,6 +39,7 @@ export async function POST(req: Request) {
 
     // No longer creating inquiry here directly. Client provides inquiryId.
 
+    /*
     // Send notifications to targeted sellers about new inquiry
     try {
       const categories = Array.from(new Set(items.map((item: any) => item.product))) as string[]
@@ -89,6 +90,7 @@ export async function POST(req: Request) {
       logger.error("Failed to send notifications for new inquiry", { error: (notificationError as Error)?.message })
       // Don't fail the request
     }
+    */
 
     return NextResponse.json({ success: true }, { status: 201 })
   } catch (error: any) {

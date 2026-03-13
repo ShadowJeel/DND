@@ -17,6 +17,7 @@ import useSWR from "swr"
 import { getOpenInquiries, getOffersBySellerId, createOffer, updateOffer, deleteOffer } from "@/lib/store"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { storage } from "@/lib/firebase"
+import { formatOptionLabel } from "@/lib/utils"
 interface InquiryItem {
   id: string
   product: string
@@ -219,7 +220,7 @@ export default function SellerPendingPage() {
                         {Object.entries(item.options || {}).map(([k, v]) => {
                           const valStr = Array.isArray(v) ? v.join(", ") : v;
                           if (!valStr) return null;
-                          return <span key={k} className="text-xs bg-background/60 shadow-sm border border-border px-2 py-1 rounded-md text-foreground/80"><span className="font-medium text-foreground">{k}:</span> {valStr}</span>
+                          return <span key={k} className="text-xs bg-background/60 shadow-sm border border-border px-2 py-1 rounded-md text-foreground/80"><span className="font-medium text-foreground">{formatOptionLabel(k)}:</span> {valStr}</span>
                         })}
                       </div>
                     </div>
@@ -309,7 +310,7 @@ export default function SellerPendingPage() {
                                 if (!valStr) return null;
                                 return (
                                   <div key={k} className="bg-background/50 border border-border shadow-sm rounded-md px-2 py-1 flex flex-col min-w-[100px]">
-                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-medium mb-0.5">{k}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-medium mb-0.5">{formatOptionLabel(k)}</span>
                                     <span className="font-semibold text-foreground text-xs">{valStr}</span>
                                   </div>
                                 )
@@ -386,7 +387,7 @@ export default function SellerPendingPage() {
                         if (!valStr) return null;
                         return (
                           <div key={k} className="bg-background border border-border shadow-sm rounded-md px-2.5 py-1.5 flex flex-col">
-                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-medium mb-0.5">{k}</span>
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-medium mb-0.5">{formatOptionLabel(k)}</span>
                             <span className="font-semibold text-foreground text-sm">{valStr}</span>
                           </div>
                         )
@@ -450,13 +451,13 @@ export default function SellerPendingPage() {
 
               <div className="grid gap-4 sm:grid-cols-2 border-t border-border pt-5">
                 <div>
-                  <Label className="text-foreground">Contact Email</Label>
+                  <Label className="text-foreground">Contact Email (Read-only)</Label>
                   <Input
                     type="email"
                     placeholder="sales@company.com"
                     value={contactEmail}
-                    onChange={(e) => setContactEmail(e.target.value)}
-                    className="mt-1"
+                    readOnly
+                    className="mt-1 bg-muted cursor-not-allowed"
                     disabled={editingOffer?.status === "accepted"}
                   />
                 </div>

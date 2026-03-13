@@ -17,6 +17,7 @@ import { logger } from "@/lib/logger"
 import { useAuth } from "@/lib/auth-context"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useEffect } from "react"
+import { validatePassword } from "@/lib/utils"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -392,32 +393,48 @@ export default function RegisterPage() {
                     onChange={(e) => updateForm("phone", e.target.value)}
                     className="mt-1.5"
                   />
+                  {/* 
                   <p className="mt-1 text-xs text-muted-foreground">
                     This number will be used for SMS and Email communication
                   </p>
+                  */}
                 </div>
                 <div>
                   <Label htmlFor="password" className="text-foreground">Password</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Min 8 characters"
+                    placeholder="Create a strong password"
                     value={form.password}
                     onChange={(e) => updateForm("password", e.target.value)}
                     className="mt-1.5"
                   />
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                    {[
+                      { key: 'minLength', label: 'At least 8 characters' },
+                      { key: 'hasUpper', label: 'One uppercase letter' },
+                      { key: 'hasLower', label: 'One lowercase letter' },
+                      { key: 'hasNumber', label: 'One number' },
+                      { key: 'hasSpecial', label: 'One special character' },
+                    ].map((req) => {
+                      const isMet = (validatePassword(form.password) as any)[req.key];
+                      return (
+                        <div key={req.key} className={`flex items-center gap-1.5 ${isMet ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {isMet ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
+                          {req.label}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="flex gap-3 mt-2">
                   <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep(2)}>Back</Button>
                   <Button
                     className="flex-1"
                     onClick={async () => {
-                      if (!form.name || !form.email || !form.phone || !form.password) {
-                        toast.error("Please fill in all required fields")
-                        return
-                      }
-                      if (form.password.length < 8) {
-                        toast.error("Password must be at least 8 characters")
+                      const pwdStatus = validatePassword(form.password);
+                      if (!pwdStatus.minLength || !pwdStatus.hasUpper || !pwdStatus.hasLower || !pwdStatus.hasNumber || !pwdStatus.hasSpecial) {
+                        toast.error("Please meet all password requirements")
                         return
                       }
                       setLoading(true)

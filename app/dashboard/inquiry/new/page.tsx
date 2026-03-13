@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { formatOptionType } from "@/lib/utils"
 
 const emptyItem: CartItem = {
   product: "",
@@ -103,7 +104,7 @@ export default function NewInquiryPage() {
     for (const opt of productOptions) {
       const optionKey = (() => {
         const hasDuplicates = productOptions.filter((o) => o.option_name === opt.option_name).length > 1;
-        return hasDuplicates ? `${opt.option_name} (${opt.option_type})` : opt.option_name;
+        return hasDuplicates ? `${opt.option_name} (${formatOptionType(opt.option_type)})` : opt.option_name;
       })();
 
       const val = currentItem.options?.[optionKey];
@@ -185,12 +186,18 @@ export default function NewInquiryPage() {
                   {productOptions.map((opt) => {
                     const optionKey = (() => {
                       const hasDuplicates = productOptions.filter(o => o.option_name === opt.option_name).length > 1;
-                      return hasDuplicates ? `${opt.option_name} (${opt.option_type})` : opt.option_name;
+                      return hasDuplicates ? `${opt.option_name} (${formatOptionType(opt.option_type)})` : opt.option_name;
                     })();
 
                     return (
                       <div key={opt.id}>
-                        <Label className="text-foreground mb-2 block">{opt.option_name} <span className="text-red-500 ml-1">*</span></Label>
+                        <Label className="text-foreground mb-2 block">
+                          {opt.option_name}
+                          {productOptions.filter(o => o.option_name === opt.option_name).length > 1 && (
+                            <span className="ml-1 text-muted-foreground">({formatOptionType(opt.option_type)})</span>
+                          )}
+                          <span className="text-red-500 ml-1">*</span>
+                        </Label>
 
                         {opt.option_type === 'dropdown' ? (
                           <Select value={(currentItem.options?.[optionKey] as string) || ""} onValueChange={(v) => updateOption(optionKey, v)}>

@@ -19,11 +19,12 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(false)
     const [formData, setFormData] = useState({
         name: user?.name || "",
+        displayName: user?.displayName || "",
         email: user?.email || "",
         phone: user?.phone || "",
         company: user?.company || "",
         categories: user?.categories || [] as string[],
-        smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
+        // smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
     })
     const [availableProducts, setAvailableProducts] = useState<{ id: string, name: string }[]>([])
 
@@ -42,6 +43,7 @@ export default function SettingsPage() {
     const handleEdit = () => {
         setFormData({
             name: user?.name || "",
+            displayName: user?.displayName || "",
             email: user?.email || "",
             phone: user?.phone || "",
             company: user?.company || "",
@@ -54,6 +56,7 @@ export default function SettingsPage() {
     const handleCancel = () => {
         setFormData({
             name: user?.name || "",
+            displayName: user?.displayName || "",
             email: user?.email || "",
             phone: user?.phone || "",
             company: user?.company || "",
@@ -151,12 +154,13 @@ export default function SettingsPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="email">Email *</Label>
+                                    <Label htmlFor="email">Email (Read-only)</Label>
                                     <Input
                                         id="email"
                                         type="email"
                                         value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                        readOnly
+                                        className="bg-muted cursor-not-allowed"
                                         placeholder="Enter your email"
                                     />
                                 </div>
@@ -257,6 +261,7 @@ export default function SettingsPage() {
                                 )}
                             </div>
 
+                            {/* 
                             <div className="space-y-4 border-t pt-4">
                                 <Label className="text-base font-semibold">Notification Preferences</Label>
                                 <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
@@ -282,15 +287,21 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                             </div>
+                            */}
 
                             <div className="grid grid-cols-2 gap-4 border-t pt-4">
-                                <div className="space-y-1">
-                                    <Label className="text-xs text-muted-foreground">Display Name</Label>
-                                    <p className="text-sm font-medium">{user?.displayName}</p>
+                                <div className="space-y-2">
+                                    <Label htmlFor="displayName">Display Name</Label>
+                                    <Input
+                                        id="displayName"
+                                        value={formData.displayName}
+                                        onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                                        placeholder="Enter display name"
+                                    />
                                 </div>
                                 <div className="space-y-1">
                                     <Label className="text-xs text-muted-foreground">Role</Label>
-                                    <p className="text-sm font-medium capitalize">{user?.role}</p>
+                                    <p className="text-sm font-medium capitalize mt-2.5">{user?.role}</p>
                                 </div>
                             </div>
 
@@ -360,6 +371,7 @@ export default function SettingsPage() {
                                 </div>
                             )}
 
+                            {/* 
                             <div className="col-span-2 border-t pt-4">
                                 <label className="text-sm font-medium text-muted-foreground">Notification Preferences</label>
                                 <div className="mt-2 flex items-center justify-between p-3 border rounded-lg bg-muted/30">
@@ -372,6 +384,7 @@ export default function SettingsPage() {
                                     <div className={`h-2.5 w-2.5 rounded-full ${user?.smsNotificationsEnabled ? 'bg-green-500' : 'bg-gray-300'}`} />
                                 </div>
                             </div>
+                            */}
                         </div>
                     )}
                 </CardContent>

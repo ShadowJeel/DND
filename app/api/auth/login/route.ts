@@ -1,6 +1,6 @@
 import { logger } from "@/lib/logger"
-import { sendWelcomeEmail } from "@/lib/email"
-import { sendWelcomeSMS } from "@/lib/sms"
+// import { sendWelcomeEmail } from "@/lib/email"
+// import { sendWelcomeSMS } from "@/lib/sms"
 import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
@@ -11,6 +11,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
   }
 
+  /*
   // Send welcome/login notification Email and SMS
   try {
     // Run in background to not block login response
@@ -23,6 +24,7 @@ export async function POST(req: Request) {
   } catch (error) {
     // Ignore sync errors
   }
+  */
 
   return NextResponse.json({ success: true })
 }

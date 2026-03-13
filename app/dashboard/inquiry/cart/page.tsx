@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createInquiry } from "@/lib/store"
+import { formatOptionType, formatOptionLabel } from "@/lib/utils"
 
 export default function CartPage() {
     const { user } = useAuth()
@@ -97,7 +98,7 @@ export default function CartPage() {
             for (const opt of productOptions) {
                 const optionKey = (() => {
                     const hasDuplicates = productOptions.filter((o) => o.option_name === opt.option_name).length > 1;
-                    return hasDuplicates ? `${opt.option_name} (${opt.option_type})` : opt.option_name;
+                    return hasDuplicates ? `${opt.option_name} (${formatOptionType(opt.option_type)})` : opt.option_name;
                 })();
 
                 const val = editingItem.options?.[optionKey];
@@ -262,7 +263,9 @@ export default function CartPage() {
                                                     if (!valStr) return null;
                                                     return (
                                                         <div key={k} className="text-sm">
-                                                            <span className="text-muted-foreground block text-xs uppercase tracking-wider font-medium mb-0.5">{k}</span>
+                                                            <span className="text-muted-foreground block text-xs uppercase tracking-wider font-medium mb-0.5">
+                                                                {formatOptionLabel(k)}
+                                                            </span>
                                                             {valStr}
                                                         </div>
                                                     )
@@ -344,7 +347,7 @@ export default function CartPage() {
                                                     const valStr = Array.isArray(v) ? v.join(", ") : v;
                                                     if (!valStr) return null;
                                                     return (
-                                                        <span key={k}><strong className="font-medium text-foreground">{k}:</strong> {valStr}</span>
+                                                        <span key={k}><strong className="font-medium text-foreground">{formatOptionLabel(k)}:</strong> {valStr}</span>
                                                     )
                                                 })}
                                             </div>
@@ -435,12 +438,18 @@ export default function CartPage() {
                                     {productOptions.map((opt) => {
                                         const optionKey = (() => {
                                             const hasDuplicates = productOptions.filter(o => o.option_name === opt.option_name).length > 1;
-                                            return hasDuplicates ? `${opt.option_name} (${opt.option_type})` : opt.option_name;
+                                            return hasDuplicates ? `${opt.option_name} (${formatOptionType(opt.option_type)})` : opt.option_name;
                                         })();
 
                                         return (
                                             <div key={opt.id}>
-                                                <Label className="text-foreground mb-2 block">{opt.option_name} <span className="text-red-500 ml-1">*</span></Label>
+                                                <Label className="text-foreground mb-2 block">
+                                                    {opt.option_name}
+                                                    {productOptions.filter(o => o.option_name === opt.option_name).length > 1 && (
+                                                        <span className="ml-1 text-muted-foreground">({formatOptionType(opt.option_type)})</span>
+                                                    )}
+                                                    <span className="text-red-500 ml-1">*</span>
+                                                </Label>
 
                                                 {opt.option_type === 'dropdown' ? (
                                                     <Select value={(editingItem.options?.[optionKey] as string) || ""} onValueChange={(v) => updateEditingOption(optionKey, v)}>

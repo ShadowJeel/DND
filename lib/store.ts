@@ -915,7 +915,7 @@ export async function getUserDisplayName(userId: string, currentUserId: string):
 
 export interface UpdateUserData {
   name?: string
-  email?: string
+  displayName?: string
   phone?: string
   company?: string
   categories?: string[]
@@ -926,6 +926,7 @@ export async function updateUser(userId: string, updates: UpdateUserData): Promi
   const updateData: any = {}
 
   if (updates.name !== undefined) updateData.name = updates.name
+  if (updates.displayName !== undefined) updateData.display_name = updates.displayName
   if (updates.phone !== undefined) updateData.phone = updates.phone
   if (updates.company !== undefined) updateData.company = updates.company
   if (updates.categories !== undefined) updateData.categories = updates.categories

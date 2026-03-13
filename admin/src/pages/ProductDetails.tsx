@@ -107,40 +107,54 @@ export function ProductDetails() {
 
                                 {selectedProduct.product_options && selectedProduct.product_options.length > 0 && (
                                     <div className="flex flex-col gap-5">
-                                        {selectedProduct.product_options.map((opt) => (
-                                            <div key={opt.id}>
-                                                <label className="text-sm font-medium mb-1.5 block">{opt.option_name} <span className="text-red-500 ml-1">*</span></label>
-                                                {opt.option_type === 'dropdown' ? (
-                                                    <select required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" defaultValue="">
-                                                        <option value="" disabled>Select {opt.option_name.toLowerCase()} of type</option>
-                                                        {(opt.dropdown_values || []).map((val, idx) => (
-                                                            <option key={idx} value={val}>{val}</option>
-                                                        ))}
-                                                    </select>
-                                                ) : opt.option_type === 'checkbox' ? (
-                                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full rounded-md border border-input bg-background p-4 min-h-[40px]">
-                                                        {(opt.dropdown_values || []).length > 0 ? (
-                                                            (opt.dropdown_values || []).map((val, idx) => (
-                                                                <label key={idx} className="flex items-start gap-2 text-sm leading-tight">
-                                                                    <input type="checkbox" value={val} className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary" />
-                                                                    <span>{val}</span>
-                                                                </label>
-                                                            ))
-                                                        ) : (
-                                                            <span className="text-sm text-muted-foreground italic col-span-full">No choices configured</span>
+                                        {[...selectedProduct.product_options]
+                                            .sort((a, b) => {
+                                                const typeOrder = { checkbox: 1, dropdown: 2, number: 3, text: 4 };
+                                                const orderA = typeOrder[a.option_type] || 5;
+                                                const orderB = typeOrder[b.option_type] || 5;
+                                                if (orderA !== orderB) return orderA - orderB;
+                                                return a.option_name.localeCompare(b.option_name);
+                                            })
+                                            .map((opt) => (
+                                                <div key={opt.id}>
+                                                    <label className="text-sm font-medium mb-1.5 block">
+                                                        {opt.option_name}
+                                                        {selectedProduct.product_options.filter(o => o.option_name === opt.option_name).length > 1 && (
+                                                            <span className="ml-1 text-muted-foreground">({opt.option_type === 'number' ? 'No.' : opt.option_type === 'dropdown' ? 'Type' : opt.option_type})</span>
                                                         )}
-                                                    </div>
-                                                ) : (
-                                                    <input
-                                                        required
-                                                        type={opt.option_type === 'number' ? 'number' : 'text'}
-                                                        min={opt.option_type === 'number' ? "0" : undefined}
-                                                        placeholder={`Enter ${opt.option_name.toLowerCase()}`}
-                                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                                    />
-                                                )}
-                                            </div>
-                                        ))}
+                                                        <span className="text-red-500 ml-1">*</span>
+                                                    </label>
+                                                    {opt.option_type === 'dropdown' ? (
+                                                        <select required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" defaultValue="">
+                                                            <option value="" disabled>Select {opt.option_name.toLowerCase()}</option>
+                                                            {(opt.dropdown_values || []).map((val, idx) => (
+                                                                <option key={idx} value={val}>{val}</option>
+                                                            ))}
+                                                        </select>
+                                                    ) : opt.option_type === 'checkbox' ? (
+                                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 w-full rounded-md border border-input bg-background p-4 min-h-[40px]">
+                                                            {(opt.dropdown_values || []).length > 0 ? (
+                                                                (opt.dropdown_values || []).map((val, idx) => (
+                                                                    <label key={idx} className="flex items-start gap-2 text-sm leading-tight">
+                                                                        <input type="checkbox" value={val} className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary" />
+                                                                        <span>{val}</span>
+                                                                    </label>
+                                                                ))
+                                                            ) : (
+                                                                <span className="text-sm text-muted-foreground italic col-span-full">No choices configured</span>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <input
+                                                            required
+                                                            type={opt.option_type === 'number' ? 'number' : 'text'}
+                                                            min={opt.option_type === 'number' ? "0" : undefined}
+                                                            placeholder={`Enter ${opt.option_name.toLowerCase()}`}
+                                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                                        />
+                                                    )}
+                                                </div>
+                                            ))}
                                     </div>
                                 )}
                                 <div>

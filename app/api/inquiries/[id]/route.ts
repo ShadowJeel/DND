@@ -1,7 +1,7 @@
 import { logger } from "@/lib/logger"
 import { activateBidding, closeInquiry, deleteInquiryItem, getInquiryById, getSellerPhonesFromOffers, updateInquiryItem } from "@/lib/store"
-import { notifySellersOfBiddingEmail } from "@/lib/email"
-import { notifySellersOfBiddingSMS } from "@/lib/sms"
+// import { notifySellersOfBiddingEmail } from "@/lib/email"
+// import { notifySellersOfBiddingSMS } from "@/lib/sms"
 import { NextResponse } from "next/server"
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -27,6 +27,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       const durationInDays = body.durationInDays || 3 // Default 3 days
       await activateBidding(id, durationInDays)
 
+      /*
       // Send WhatsApp notifications to all sellers who submitted offers
       try {
         const inquiry = await getInquiryById(id)
@@ -57,6 +58,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         logger.error("Failed to send notifications for bidding", { error: (notificationError as Error)?.message })
         // Don't fail the request if notification fails
       }
+      */
 
       return NextResponse.json({ success: true })
     }
