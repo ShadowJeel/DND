@@ -84,11 +84,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8 md:py-12">
       <div className="w-full max-w-md">
         <Link
           href="/"
-          className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+          className="mb-6 md:mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to home
@@ -96,8 +96,8 @@ export default function LoginPage() {
 
         <Card className="border-border">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-              <Factory className="h-6 w-6 text-primary-foreground" />
+            <div className="mx-auto mb-3 md:mb-4 flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl bg-primary">
+              <Factory className="h-5 w-5 md:h-6 md:w-6 text-primary-foreground" />
             </div>
             <CardTitle className="font-serif text-2xl text-foreground">Welcome back</CardTitle>
             <CardDescription className="text-muted-foreground">
@@ -108,7 +108,7 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="flex flex-col gap-4">
               <div>
                 <Label htmlFor="email" className="text-foreground">Email Address</Label>
-                <Input id="email" type="email" placeholder="john@company.com" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" />
+                <Input id="email" type="email" placeholder="john@company.com" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1 md:mt-1.5" />
               </div>
               <div>
                 <div className="flex items-center justify-between">
@@ -117,7 +117,7 @@ export default function LoginPage() {
                     Forgot Password?
                   </button>
                 </div>
-                <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1.5" />
+                <Input id="password" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} className="mt-1 md:mt-1.5" />
               </div>
               <Button type="submit" className="mt-2 w-full" disabled={loading}>
                 {loading ? "Signing in..." : "Sign In"}

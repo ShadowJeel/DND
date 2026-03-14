@@ -27,8 +27,8 @@ export default function InquiriesPage() {
   )
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="mx-auto max-w-5xl px-4 md:px-0">
+      <div className="mb-4 md:mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-serif text-2xl font-bold text-foreground">My Inquiries</h2>
           <p className="mt-1 text-muted-foreground">Track and manage all your procurement inquiries.</p>

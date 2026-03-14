@@ -30,8 +30,8 @@ export default function DashboardOverview() {
   const activeBidsCount = Array.isArray(sellerOffers) ? sellerOffers.filter((o: any) => o.status === "pending").length : 0
 
   return (
-    <div className="mx-auto max-w-6xl">
-      <div className="mb-8">
+    <div className="mx-auto max-w-6xl px-4 md:px-0">
+      <div className="mb-4 md:mb-8">
         <h2 className="font-serif text-2xl font-bold text-foreground">
           Welcome back, {user?.name}
         </h2>
@@ -41,7 +41,7 @@ export default function DashboardOverview() {
       </div>
 
       {/* Stats Cards */}
-      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-4 md:mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {isBuyer && (
           <>
             <Card className="border-border">
@@ -50,7 +50,7 @@ export default function DashboardOverview() {
                 <FileText className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">{inquiryCount}</div>
+                <div className="text-2xl md:text-3xl font-bold text-foreground">{inquiryCount}</div>
                 <p className="mt-1 text-xs text-muted-foreground">Total inquiries created</p>
               </CardContent>
             </Card>
@@ -60,7 +60,7 @@ export default function DashboardOverview() {
                 <ShoppingCart className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">
+                <div className="text-2xl md:text-3xl font-bold text-foreground">
                   {Array.isArray(buyerInquiries) ? buyerInquiries.filter((i: { status: string }) => i.status !== "closed").length : 0}
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">Awaiting offers</p>
@@ -76,7 +76,7 @@ export default function DashboardOverview() {
                 <FileText className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">{openInquiryCount}</div>
+                <div className="text-2xl md:text-3xl font-bold text-foreground">{openInquiryCount}</div>
                 <p className="mt-1 text-xs text-muted-foreground">Open inquiries available</p>
               </CardContent>
             </Card>
@@ -86,7 +86,7 @@ export default function DashboardOverview() {
                 <Clock className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">{activeBidsCount}</div>
+                <div className="text-2xl md:text-3xl font-bold text-foreground">{activeBidsCount}</div>
                 <p className="mt-1 text-xs text-muted-foreground">Bids pending review</p>
               </CardContent>
             </Card>
@@ -96,7 +96,7 @@ export default function DashboardOverview() {
                 <Tag className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">{offerCount}</div>
+                <div className="text-2xl md:text-3xl font-bold text-foreground">{offerCount}</div>
                 <p className="mt-1 text-xs text-muted-foreground">Total offers made</p>
               </CardContent>
             </Card>
@@ -106,7 +106,7 @@ export default function DashboardOverview() {
                 <TrendingUp className="h-4 w-4 text-primary" />
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold text-foreground">
+                <div className="text-2xl md:text-3xl font-bold text-foreground">
                   {offerCount > 0
                     ? `${Math.round(((Array.isArray(sellerOffers) ? sellerOffers : []).filter((o: { status: string }) => o.status === "accepted").length / offerCount) * 100)}%`
                     : "N/A"}

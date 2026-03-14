@@ -143,8 +143,8 @@ export default function NewInquiryPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-6 flex items-start justify-between">
+    <div className="mx-auto max-w-3xl px-4 md:px-0">
+      <div className="mb-4 md:mb-6 flex items-start justify-between">
         <div>
           <h2 className="font-serif text-2xl font-bold text-foreground">Create New Inquiry</h2>
           <p className="mt-1 text-muted-foreground">
@@ -153,7 +153,7 @@ export default function NewInquiryPage() {
         </div>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-4 md:gap-6">
         {/* Product Form */}
         <div>
           <Card className="border-border">
@@ -163,7 +163,7 @@ export default function NewInquiryPage() {
                 Product Specifications
               </CardTitle>
             </CardHeader>
-            <CardContent className="flex flex-col gap-6">
+            <CardContent className="flex flex-col gap-4 md:gap-6">
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
@@ -181,7 +181,7 @@ export default function NewInquiryPage() {
 
               {/* Dynamic Product Options */}
               {productOptions.length > 0 ? (
-                <div className="flex flex-col gap-5 border-t border-b border-border py-6">
+                <div className="flex flex-col gap-4 md:gap-5 border-t border-b border-border py-4 md:py-6">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Product Options</h3>
                   {productOptions.map((opt) => {
                     const optionKey = (() => {
@@ -255,11 +255,11 @@ export default function NewInquiryPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 mt-6">
-                <Button onClick={handleAddToCart} className="gap-2 sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-center gap-3 mt-4 md:mt-6">
+                <Button onClick={handleAddToCart} className="w-full sm:w-auto gap-2">
                   <Plus className="h-4 w-4" /> Add to Cart (Clear Form)
                 </Button>
-                <Button onClick={handleKeepToCart} variant="secondary" className="gap-2 sm:w-auto">
+                <Button onClick={handleKeepToCart} variant="secondary" className="w-full sm:w-auto gap-2">
                   <Package className="h-4 w-4" /> Keep to Cart (Keep Data)
                 </Button>
               </div>

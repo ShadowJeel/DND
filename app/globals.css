@@ -93,12 +93,28 @@
   * {
     @apply border-border;
   }
+
   body {
-    @apply text-foreground min-h-screen;
+    @apply text-foreground min-h-screen text-base md:text-sm;
     background: radial-gradient(ellipse at top, hsl(var(--primary)/0.03), bg-background, bg-background);
-    /* For standard Tailwind background */
     @apply bg-background;
-    /* Then overriding with a pseudo-element for depth (or directly depending on browser support, direct radial is fine for now but let's just do a nice tailwind base) */
     background-image: radial-gradient(circle at top center, hsl(var(--primary) / 0.05) 0%, transparent 70%), linear-gradient(to bottom, transparent, transparent);
+  }
+
+  h1 {
+    @apply text-2xl md:text-3xl font-bold;
+  }
+
+  h2 {
+    @apply text-xl md:text-2xl font-bold;
+  }
+
+  h3 {
+    @apply text-lg md:text-xl font-semibold;
+  }
+
+  /* Compact spacing for mobile */
+  .container {
+    @apply px-4 md:px-6;
   }
 }

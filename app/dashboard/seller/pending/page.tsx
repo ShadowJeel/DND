@@ -210,12 +210,12 @@ export default function SellerPendingPage() {
               <CardContent className="pt-4">
                 <div className="mb-4 flex flex-col gap-3">
                   {inq.items.map((item) => (
-                    <div key={item.id} className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg bg-white/40 dark:bg-zinc-800/40 backdrop-blur-md p-4 text-sm border border-white/20 shadow-sm transition-all hover:shadow-md">
+                    <div key={item.id} className="flex flex-row items-center flex-wrap gap-2 rounded-lg bg-white/40 dark:bg-zinc-800/40 backdrop-blur-md p-3 md:p-4 text-sm border border-white/20 shadow-sm transition-all hover:shadow-md">
                       <div className="flex items-center gap-2 font-semibold text-foreground shrink-0 bg-primary/10 px-2.5 py-1 rounded-md">
                         <Package className="h-4 w-4 text-primary" />
                         {item.product}
                       </div>
-                      <div className="hidden sm:block text-muted-foreground/30 mx-1">|</div>
+                      <div className="text-muted-foreground/30 mx-1">|</div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-muted-foreground">
                         {Object.entries(item.options || {}).map(([k, v]) => {
                           const valStr = Array.isArray(v) ? v.join(", ") : v;

@@ -151,93 +151,178 @@ export default function SellerMyOffersPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-border">
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border">
-                  <TableHead className="text-muted-foreground">Offer ID</TableHead>
-                  <TableHead className="text-muted-foreground">Inquiry</TableHead>
-                  <TableHead className="text-muted-foreground">Item</TableHead>
-                  <TableHead className="text-muted-foreground">Price/Ton</TableHead>
-                  <TableHead className="text-muted-foreground">Rank</TableHead>
-                  <TableHead className="text-muted-foreground">Status</TableHead>
-                  <TableHead className="text-muted-foreground">Buyer Contact</TableHead>
-                  <TableHead className="text-muted-foreground">Date</TableHead>
-                  <TableHead className="text-right text-muted-foreground">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {offers.map((offer: any) => (
-                  <TableRow key={offer.id} className="border-border">
-                    <TableCell className="font-medium text-foreground">{offer.id}</TableCell>
-                    <TableCell className="text-foreground">{offer.inquiryId}</TableCell>
-                    <TableCell className="text-muted-foreground">{offer.inquiryItemId}</TableCell>
-                    <TableCell className="font-semibold text-foreground">
-                      {"₹"}{offer.pricePerTon.toLocaleString("en-IN")}
-                    </TableCell>
-                    <TableCell>{rankBadge(offer.rank)}</TableCell>
-                    <TableCell>{statusBadge(offer.status)}</TableCell>
-                    <TableCell>
-                      {offer.status === "accepted" ? (
-                        <div className="flex flex-col text-xs space-y-1">
-                          {offer.buyerName && <div className="font-medium text-foreground">{offer.buyerName}</div>}
+        <div className="space-y-4">
+          {/* Desktop Table */}
+          <Card className="hidden border-border md:block">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border">
+                    <TableHead className="text-muted-foreground">Offer ID</TableHead>
+                    <TableHead className="text-muted-foreground">Inquiry</TableHead>
+                    <TableHead className="text-muted-foreground">Item</TableHead>
+                    <TableHead className="text-muted-foreground">Price/Ton</TableHead>
+                    <TableHead className="text-muted-foreground">Rank</TableHead>
+                    <TableHead className="text-muted-foreground">Status</TableHead>
+                    <TableHead className="text-muted-foreground">Buyer Contact</TableHead>
+                    <TableHead className="text-muted-foreground">Date</TableHead>
+                    <TableHead className="text-right text-muted-foreground">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {offers.map((offer: any) => (
+                    <TableRow key={offer.id} className="border-border">
+                      <TableCell className="font-medium text-foreground">{offer.id}</TableCell>
+                      <TableCell className="text-foreground">{offer.inquiryId}</TableCell>
+                      <TableCell className="text-muted-foreground">{offer.inquiryItemId}</TableCell>
+                      <TableCell className="font-semibold text-foreground">
+                        {"₹"}{offer.pricePerTon.toLocaleString("en-IN")}
+                      </TableCell>
+                      <TableCell>{rankBadge(offer.rank)}</TableCell>
+                      <TableCell>{statusBadge(offer.status)}</TableCell>
+                      <TableCell>
+                        {offer.status === "accepted" ? (
+                          <div className="flex flex-col space-y-1 text-xs">
+                            {offer.buyerName && <div className="font-medium text-foreground">{offer.buyerName}</div>}
+                            {offer.buyerEmail && (
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <Mail className="h-3 w-3" /> {offer.buyerEmail}
+                              </div>
+                            )}
+                            {offer.buyerPhone && (
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <Phone className="h-3 w-3" /> {offer.buyerPhone}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(offer.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {offer.status !== "accepted" && (
+                          <div className="flex items-center justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-primary hover:bg-primary/10"
+                              onClick={() => {
+                                setEditingOffer(offer)
+                                setSelectedPdf(null)
+                                setRemoveExistingPdf(false)
+                                setPricePerTon(offer.pricePerTon.toString())
+                                setContactEmail(offer.contactEmail || user?.email || "")
+                                setContactPhone(offer.contactPhone || user?.phone || "")
+                                setQuoteComments(offer.comments || "")
+                              }}
+                              title="Edit Offer"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-destructive hover:bg-destructive/10"
+                              onClick={() => handleDeleteOffer(offer.id)}
+                              title="Delete Offer"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* Mobile Card View */}
+          <div className="flex flex-col gap-4 md:hidden">
+            {offers.map((offer: any) => (
+              <Card key={offer.id} className="border-border">
+                <CardContent className="p-4">
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="text-xs font-medium text-muted-foreground">Offer ID: {offer.id}</div>
+                        <div className="text-sm font-semibold text-foreground">Inquiry: {offer.inquiryId}</div>
+                        <div className="text-xs text-muted-foreground">Item: {offer.inquiryItemId}</div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        {statusBadge(offer.status)}
+                        {rankBadge(offer.rank)}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 border-t border-b border-border py-3">
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Price/Ton</div>
+                        <div className="text-base font-bold text-foreground">₹{offer.pricePerTon.toLocaleString("en-IN")}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Date</div>
+                        <div className="text-sm text-foreground">{new Date(offer.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</div>
+                      </div>
+                    </div>
+
+                    {offer.status === "accepted" && (
+                      <div className="rounded-lg bg-muted/30 p-3">
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Buyer Contact</div>
+                        <div className="flex flex-col gap-1.5 ">
+                          {offer.buyerName && <div className="text-sm font-bold text-foreground">{offer.buyerName}</div>}
                           {offer.buyerEmail && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <Mail className="h-3 w-3" /> {offer.buyerEmail}
                             </div>
                           )}
                           {offer.buyerPhone && (
-                            <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <Phone className="h-3 w-3" /> {offer.buyerPhone}
                             </div>
                           )}
                         </div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground italic">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {new Date(offer.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {offer.status !== "accepted" && (
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-primary hover:bg-primary/10"
-                            onClick={() => {
-                              setEditingOffer(offer)
-                              setSelectedPdf(null)
-                              setRemoveExistingPdf(false)
-                              setPricePerTon(offer.pricePerTon.toString())
-                              setContactEmail(offer.contactEmail || user?.email || "")
-                              setContactPhone(offer.contactPhone || user?.phone || "")
-                              setQuoteComments(offer.comments || "")
-                            }}
-                            title="Edit Offer"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-destructive hover:bg-destructive/10"
-                            onClick={() => handleDeleteOffer(offer.id)}
-                            title="Delete Offer"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                      </div>
+                    )}
+
+                    {offer.status !== "accepted" && (
+                      <div className="flex gap-2 pt-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 gap-2 h-9"
+                          onClick={() => {
+                            setEditingOffer(offer)
+                            setSelectedPdf(null)
+                            setRemoveExistingPdf(false)
+                            setPricePerTon(offer.pricePerTon.toString())
+                            setContactEmail(offer.contactEmail || user?.email || "")
+                            setContactPhone(offer.contactPhone || user?.phone || "")
+                            setQuoteComments(offer.comments || "")
+                          }}
+                        >
+                          <Edit className="h-3.5 w-3.5" /> Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 gap-2 h-9 text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteOffer(offer.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" /> Delete
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Competitive Intelligence Note */}
