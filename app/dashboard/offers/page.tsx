@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { BiddingTimer } from "@/components/bidding-timer"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,12 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/lib/auth-context"
-import { AlertCircle, ArrowUpDown, CheckCircle, Clock, FileText, Gavel, Lock, Mail, Phone, Tag, Trash2, Trophy, RotateCcw } from "lucide-react"
+import { AlertCircle, ArrowUpDown, CheckCircle, Clock, FileText, Gavel, Lock, Mail, Phone, Tag, Trash2, Trophy, RotateCcw, ArrowLeft } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
 import { toast } from "sonner"
 import useSWR from "swr"
-import { getInquiryById, getOffersByInquiryId, getInquiriesByBuyerId, acceptOffer, disqualifyOffer, closeInquiry, softDeleteOffer, activateBidding } from "@/lib/store"
+import { getInquiryById, getOffersByInquiryId, getInquiriesByBuyerId, acceptOffer, disqualifyOffer, closeInquiry, revertOfferToPending, activateBidding } from "@/lib/store"
+import { formatOptionLabel } from "@/lib/utils"
 
 function rankBadge(rank?: number) {
   if (!rank) return <span className="text-muted-foreground">-</span>
@@ -78,14 +80,16 @@ function OffersContent() {
     toast.success("Offer accepted! Seller notified via Email and SMS.")
   }
 
-  const handleRebid = async (offerId: string) => {
+  const handleRebid = async (offerId?: string) => {
     try {
-      await softDeleteOffer(offerId)
+      if (offerId) {
+        await revertOfferToPending(offerId)
+      }
       if (inquiryId) await activateBidding(inquiryId, 3)
 
       mutate()
       if (mutateInquiry) mutateInquiry()
-      toast.success("Bidding resumed for 3 days. The offer has been removed.")
+      toast.success(offerId ? "Bidding resumed for 3 days. The accepted offer has been moved back to pending." : "Bidding resumed for 3 days.")
     } catch (error) {
       toast.error("Failed to resume bidding")
     }
@@ -109,7 +113,7 @@ function OffersContent() {
                       <div>
                         <span className="font-semibold text-foreground">{inq.id}</span>
                         <span className="ml-3 text-sm text-muted-foreground">
-                          {inq.items.map((i: { product: string }) => i.product).join(", ")}
+                          {inq.items.map((i: { product: string; sub_product?: string }) => i.sub_product ? `${i.product} (${i.sub_product})` : i.product).join(", ")}
                         </span>
                       </div>
                     </div>
@@ -135,12 +139,18 @@ function OffersContent() {
 
   return (
     <div className="mx-auto max-w-6xl">
+      <div className="mb-4">
+        <Link href="/dashboard/inquiries" className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <ArrowLeft className="h-4 w-4" />
+          Back to Inquiries
+        </Link>
+      </div>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-serif text-2xl font-bold text-foreground flex items-center gap-3">
             Offers for {inquiryId}
             {displayStatus === "bidding" && inquiry?.biddingDeadline && (
-              <BiddingTimer deadline={inquiry.biddingDeadline} status={inquiry.status} />
+              <BiddingTimer deadline={inquiry.biddingDeadline} status={inquiry.status as "open" | "bidding" | "closed"} />
             )}
             {displayStatus === "closed" && (
               <Badge variant="outline" className="border-destructive bg-destructive/10 text-destructive gap-1.5 text-sm font-medium">
@@ -175,13 +185,13 @@ function OffersContent() {
       {inquiry && (
         <Tabs defaultValue={inquiry.items?.[0]?.id} className="w-full">
           <TabsList className="mb-6 flex w-full flex-wrap justify-start h-auto gap-2 bg-transparent p-0">
-            {inquiry.items?.map((item: { id: string; product: string }) => (
+            {inquiry.items?.map((item: { id: string; product: string; sub_product?: string }) => (
               <TabsTrigger
                 key={item.id}
                 value={item.id}
                 className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground border border-input bg-background px-4 py-2"
               >
-                {item.product}
+                {item.product} {item.sub_product && <span className="text-[10px] opacity-70 block font-normal text-xs">({item.sub_product})</span>}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -196,6 +206,20 @@ function OffersContent() {
                     <CardContent className="flex flex-col items-center gap-3 py-16">
                       <AlertCircle className="h-10 w-10 text-muted-foreground/30" />
                       <p className="text-muted-foreground">No offers received yet for this item.</p>
+                      {displayStatus === "closed" && (inquiry.rebidCount || 0) < 1 && (
+                        <div className="mt-4">
+                          <Button size="sm" variant="outline" className="h-9 gap-1.5 text-sm text-primary hover:text-primary bg-primary/5 hover:bg-primary/10 border-primary/20" onClick={() => handleRebid()}>
+                            <RotateCcw className="h-4 w-4" /> Re-bid & Resume Bidding
+                          </Button>
+                        </div>
+                      )}
+                      {displayStatus === "closed" && (inquiry.rebidCount || 0) >= 1 && (
+                        <div className="mt-4">
+                          <span className="text-sm text-muted-foreground italic flex items-center gap-1.5">
+                            <AlertCircle className="h-4 w-4" /> No more re-bid chances left
+                          </span>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ) : (
@@ -207,7 +231,9 @@ function OffersContent() {
                             <TableRow className="border-border">
                               <TableHead className="whitespace-nowrap text-muted-foreground">Seller</TableHead>
                               <TableHead className="whitespace-nowrap text-muted-foreground">Price/Ton</TableHead>
+                              <TableHead className="text-muted-foreground">Total Est.</TableHead>
                               <TableHead className="whitespace-nowrap text-muted-foreground">Rank</TableHead>
+                              <TableHead className="whitespace-nowrap text-muted-foreground">Specs</TableHead>
                               <TableHead className="whitespace-nowrap text-muted-foreground">Comments</TableHead>
                               <TableHead className="whitespace-nowrap text-muted-foreground">Document</TableHead>
                               <TableHead className="whitespace-nowrap text-muted-foreground">Contact Info</TableHead>
@@ -224,8 +250,26 @@ function OffersContent() {
                                 <TableCell className="whitespace-nowrap font-semibold text-foreground">
                                   {"₹"}{offer.pricePerTon.toLocaleString("en-IN")}
                                 </TableCell>
+                                <TableCell className="whitespace-nowrap font-bold text-primary">
+                                  {(() => {
+                                    const requestedQuantityRaw = (item as any)?.options?.["Quantity"] || (item as any)?.options?.["Qty"] || (item as any)?.options?.["quantity"];
+                                    const requestedQuantity = parseFloat(String(requestedQuantityRaw).replace(/[^\d.]/g, '')) || 1;
+                                    return "₹" + (offer.pricePerTon * requestedQuantity).toLocaleString("en-IN");
+                                  })()}
+                                </TableCell>
                                 <TableCell className="whitespace-nowrap">{rankBadge(offer.rank)}</TableCell>
-                                <TableCell className="max-w-[200px] truncate text-muted-foreground">{offer.comments || "-"}</TableCell>
+                                <TableCell className="max-w-[200px] truncate text-muted-foreground">
+                                  {offer.sellerOptions && Object.keys(offer.sellerOptions).length > 0 ? (
+                                    <div className="flex flex-col gap-1 text-xs whitespace-normal">
+                                      {Object.entries(offer.sellerOptions).map(([k, v]) => {
+                                        const valStr = Array.isArray(v) ? v.join(", ") : v;
+                                        if (!valStr) return null;
+                                        return <span key={k}><strong className="font-medium text-foreground">{formatOptionLabel(k)}:</strong> {String(valStr)}</span>
+                                      })}
+                                    </div>
+                                  ) : "-"}
+                                </TableCell>
+                                <TableCell className="max-w-[200px] truncate text-muted-foreground whitespace-normal">{offer.comments || "-"}</TableCell>
                                 <TableCell className="whitespace-nowrap">
                                   {offer.pdfUrl ? (
                                     <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs text-primary" onClick={() => window.open(offer.pdfUrl, '_blank')}>
@@ -288,9 +332,24 @@ function OffersContent() {
                               <span className="font-semibold text-foreground text-sm flex items-center gap-2">
                                 {offer.anonymizedSeller || "Unknown Seller"}
                               </span>
-                              <div className="flex flex-col items-end">
-                                <span className="font-bold text-lg text-primary">₹{offer.pricePerTon.toLocaleString("en-IN")}</span>
-                                <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Per Ton</span>
+                              <div className="flex flex-col items-end gap-1">
+                                <div className="flex flex-col items-end">
+                                  <span className="font-bold text-lg text-primary">₹{offer.pricePerTon.toLocaleString("en-IN")}</span>
+                                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Per Ton</span>
+                                </div>
+                                <div className="flex flex-col items-end pt-1 border-t border-border/50">
+                                  {(() => {
+                                    const requestedQuantityRaw = (item as any)?.options?.["Quantity"] || (item as any)?.options?.["Qty"] || (item as any)?.options?.["quantity"];
+                                    const requestedQuantity = parseFloat(String(requestedQuantityRaw).replace(/[^\d.]/g, '')) || 1;
+                                    const total = offer.pricePerTon * requestedQuantity;
+                                    return (
+                                      <>
+                                        <span className="font-bold text-sm text-foreground">₹{total.toLocaleString("en-IN")}</span>
+                                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Total Est.</span>
+                                      </>
+                                    )
+                                  })()}
+                                </div>
                               </div>
                             </div>
 
@@ -305,6 +364,19 @@ function OffersContent() {
                                 </Button>
                               )}
                             </div>
+
+                            {offer.sellerOptions && Object.keys(offer.sellerOptions).length > 0 && (
+                              <div className="bg-muted/20 p-2.5 rounded-md mt-1 border border-border/30">
+                                <div className="text-xs font-semibold text-foreground/80 mb-1 uppercase tracking-wider">Specs</div>
+                                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                                  {Object.entries(offer.sellerOptions).map(([k, v]) => {
+                                    const valStr = Array.isArray(v) ? v.join(", ") : v;
+                                    if (!valStr) return null;
+                                    return <span key={k}><strong className="font-medium text-foreground">{formatOptionLabel(k)}:</strong> {String(valStr)}</span>
+                                  })}
+                                </div>
+                              </div>
+                            )}
 
                             {offer.comments && (
                               <div className="bg-muted/40 p-2.5 rounded-md mt-1 border border-border/50">
@@ -356,14 +428,25 @@ function OffersContent() {
 
                       {(() => {
                         const acceptedOffer = itemOffers.find((o: any) => o.status === "accepted");
-                        if (!acceptedOffer) return null;
-                        return (
-                          <div className="p-4 border-t border-border flex justify-end bg-muted/20">
-                            <Button size="sm" variant="outline" className="h-9 gap-1.5 text-sm text-primary hover:text-primary bg-primary/5 hover:bg-primary/10 border-primary/20" onClick={() => handleRebid(acceptedOffer.id)}>
-                              <RotateCcw className="h-4 w-4" /> Re-bid & Resume Bidding
-                            </Button>
-                          </div>
-                        );
+                        if (displayStatus === "closed" && (inquiry.rebidCount || 0) < 1) {
+                          return (
+                            <div className="p-4 border-t border-border flex justify-end bg-muted/20">
+                              <Button size="sm" variant="outline" className="h-9 gap-1.5 text-sm text-primary hover:text-primary bg-primary/5 hover:bg-primary/10 border-primary/20" onClick={() => handleRebid(acceptedOffer?.id)}>
+                                <RotateCcw className="h-4 w-4" /> Re-bid & Resume Bidding
+                              </Button>
+                            </div>
+                          );
+                        }
+                        if (displayStatus === "closed" && (inquiry.rebidCount || 0) >= 1) {
+                          return (
+                            <div className="p-4 border-t border-border flex justify-end bg-muted/20">
+                              <span className="text-xs text-muted-foreground italic flex items-center gap-1.5">
+                                <AlertCircle className="h-3.5 w-3.5" /> No more re-bid chances available for this inquiry.
+                              </span>
+                            </div>
+                          );
+                        }
+                        return null;
                       })()}
                     </CardContent>
                   </Card>
@@ -372,8 +455,9 @@ function OffersContent() {
             )
           })}
         </Tabs>
-      )}
-    </div>
+      )
+      }
+    </div >
   )
 }
 

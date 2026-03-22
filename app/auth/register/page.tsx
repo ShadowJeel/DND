@@ -17,7 +17,7 @@ import { logger } from "@/lib/logger"
 import { useAuth } from "@/lib/auth-context"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useEffect } from "react"
-import { validatePassword } from "@/lib/utils"
+
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -25,24 +25,10 @@ export default function RegisterPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [verifying, setVerifying] = useState(false)
-  const [verified, setVerified] = useState(false)
-  const [verificationError, setVerificationError] = useState("")
-  const [maskedAadhaar, setMaskedAadhaar] = useState("")
+
   const [uploadingFile, setUploadingFile] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [uploadedFilePath, setUploadedFilePath] = useState("")
-  const [products, setProducts] = useState<{ id: string, name: string }[]>([])
-  const [fetchingProducts, setFetchingProducts] = useState(false)
-  const [gstDetails, setGstDetails] = useState<{
-    gstin: string
-    legalName?: string
-    tradeName?: string
-    status?: string
-    registrationDate?: string
-    type?: string
-  } | null>(null)
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -55,101 +41,17 @@ export default function RegisterPage() {
     gstin: "",
     documentPath: "",
     selectedCategories: [] as string[],
+    productManufacturers: {} as Record<string, string[]>,
   })
-
-  useEffect(() => {
-    const fetchCats = async () => {
-      setFetchingProducts(true)
-      try {
-        const { getProducts } = await import("@/lib/store")
-        const data = await getProducts()
-        setProducts(data)
-      } catch (err) {
-        logger.error("Failed to fetch products for registration", { error: (err as Error).message })
-      } finally {
-        setFetchingProducts(false)
-      }
-    }
-    fetchCats()
-  }, [])
 
   const updateForm = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
-    // Reset verification when user changes the verification input
-    if (field === "gstin" || field === "aadhaarNumber") {
-      setVerified(false)
-      setVerificationError("")
-      setGstDetails(null)
-      setMaskedAadhaar("")
-    }
+
   }
 
-  // --- Aadhaar Verification (Buyer) ---
-  const verifyAadhaar = async () => {
-    if (!form.aadhaarNumber) {
-      setVerificationError("Please enter your Aadhaar number")
-      return
-    }
-    setVerifying(true)
-    setVerificationError("")
-    setVerified(false)
-    try {
-      const res = await fetch("/api/verify/aadhaar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ aadhaarNumber: form.aadhaarNumber }),
-      })
-      const data = await res.json()
-      if (res.ok && data.valid) {
-        setVerified(true)
-        setMaskedAadhaar(data.masked)
-        toast.success("Aadhaar verified successfully!")
-      } else {
-        setVerificationError(data.message || "Invalid Aadhaar number")
-      }
-    } catch {
-      setVerificationError("Verification service unavailable. Please try again.")
-    } finally {
-      setVerifying(false)
-    }
-  }
 
-  // --- GSTIN Verification (Seller) ---
-  const verifyGstin = async () => {
-    if (!form.gstin) {
-      setVerificationError("Please enter your GSTIN")
-      return
-    }
-    setVerifying(true)
-    setVerificationError("")
-    setVerified(false)
-    setGstDetails(null)
-    try {
-      const res = await fetch("/api/verify/gstin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gstin: form.gstin }),
-      })
-      const data = await res.json()
-      if (res.ok && data.valid) {
-        setVerified(true)
-        setGstDetails(data.details)
-        toast.success("GSTIN verified successfully!")
-      } else {
-        setVerificationError(data.message || "Invalid GSTIN")
-      }
-    } catch {
-      setVerificationError("Verification service unavailable. Please try again.")
-    } finally {
-      setVerifying(false)
-    }
-  }
 
   const handleSubmit = async () => {
-    if (!verified) {
-      toast.error(`Please verify your ${form.entityType === "company" ? "GSTIN" : "Aadhaar"} first`)
-      return
-    }
     if (!uploadedFilePath) {
       toast.error("Please upload the required document")
       return
@@ -161,6 +63,7 @@ export default function RegisterPage() {
         ...payload,
         verificationType: form.entityType === "company" ? "gst" : "aadhar",
         categories: form.role === "seller" ? form.selectedCategories : [],
+        productManufacturers: form.role === "seller" ? form.productManufacturers : {},
       } as any)
       if (!success) {
         toast.error("Registration failed")
@@ -177,21 +80,13 @@ export default function RegisterPage() {
 
   const handleRoleChange = (role: string) => {
     setForm((prev) => ({ ...prev, role: role as "buyer" | "seller" }))
-    // Reset all verification state when role changes
-    setVerified(false)
-    setVerificationError("")
-    setGstDetails(null)
-    setMaskedAadhaar("")
+
     setForm((prev) => ({ ...prev, selectedCategories: [] }))
   }
 
   const handleEntityTypeChange = (entityType: string) => {
     setForm((prev) => ({ ...prev, entityType: entityType as "company" | "individual" }))
-    // Reset verification and upload state
-    setVerified(false)
-    setVerificationError("")
-    setGstDetails(null)
-    setMaskedAadhaar("")
+    // Reset upload state
     setUploadedFile(null)
     setUploadedFilePath("")
     // Reset file input
@@ -214,16 +109,16 @@ export default function RegisterPage() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validate file size (2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("File size must be less than 2MB")
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB")
       return
     }
 
-    // Validate file type (Images only)
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"]
-    if (!allowedTypes.includes(file.type)) {
-      toast.error("Only image files (JPEG, JPG, PNG) are allowed")
+    // Validate file type (Images and PDF only)
+    const isValidType = file.type.startsWith("image/") || file.type === "application/pdf"
+    if (!isValidType) {
+      toast.error("Only image files and PDFs are allowed")
       return
     }
 
@@ -274,18 +169,11 @@ export default function RegisterPage() {
                   ? "Register as a company or individual"
                   : step === 3
                     ? "Enter your personal details"
-                    : step === 4
-                      ? `Verify your ${form.entityType === "company" ? "GSTIN" : "Aadhaar"}`
-                      : step === 5
-                        ? "Upload verification document"
-                        : "Select product categories"}
+                    : `${form.entityType === "company" ? "Enter GSTIN & Upload Certificate" : "Enter Aadhaar & Upload Document"}`}
             </CardDescription>
             <div className="mt-4 flex items-center justify-center gap-2">
-              {[1, 2, 3, 4, 5, 6].map((s) => (
-                // Hide step 6 visually if not a seller
-                (s < 6 || form.role === 'seller') && (
-                  <div key={s} className={`h-2 w-8 rounded-full ${s <= step ? "bg-primary" : "bg-muted"}`} />
-                )
+              {[1, 2, 3, 4].map((s) => (
+                <div key={s} className={`h-2 w-8 rounded-full ${s <= step ? "bg-primary" : "bg-muted"}`} />
               ))}
             </div>
           </CardHeader>
@@ -344,8 +232,8 @@ export default function RegisterPage() {
                   <p className="flex items-center gap-2 text-sm text-foreground">
                     <ShieldCheck className="h-4 w-4 text-primary" />
                     {form.entityType === "company"
-                      ? "Companies require GSTIN certificate image upload (JPEG/PNG, max 2MB)"
-                      : "Individuals require Aadhaar card image upload (JPEG/PNG, max 2MB)"}
+                      ? "Companies require GSTIN certificate upload (Image/PDF, max 5MB)"
+                      : "Individuals require Aadhaar card upload (Image/PDF, max 5MB)"}
                   </p>
                 </div>
                 <div className="flex gap-3">
@@ -409,32 +297,15 @@ export default function RegisterPage() {
                     onChange={(e) => updateForm("password", e.target.value)}
                     className="mt-1.5"
                   />
-                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                    {[
-                      { key: 'minLength', label: 'At least 8 characters' },
-                      { key: 'hasUpper', label: 'One uppercase letter' },
-                      { key: 'hasLower', label: 'One lowercase letter' },
-                      { key: 'hasNumber', label: 'One number' },
-                      { key: 'hasSpecial', label: 'One special character' },
-                    ].map((req) => {
-                      const isMet = (validatePassword(form.password) as any)[req.key];
-                      return (
-                        <div key={req.key} className={`flex items-center gap-1.5 ${isMet ? 'text-green-600' : 'text-muted-foreground'}`}>
-                          {isMet ? <CheckCircle2 className="h-3 w-3" /> : <div className="h-3 w-3 rounded-full border border-current" />}
-                          {req.label}
-                        </div>
-                      );
-                    })}
-                  </div>
+
                 </div>
                 <div className="flex gap-3 mt-2">
                   <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep(2)}>Back</Button>
                   <Button
                     className="flex-1"
                     onClick={async () => {
-                      const pwdStatus = validatePassword(form.password);
-                      if (!pwdStatus.minLength || !pwdStatus.hasUpper || !pwdStatus.hasLower || !pwdStatus.hasNumber || !pwdStatus.hasSpecial) {
-                        toast.error("Please meet all password requirements")
+                      if (!form.email.toLowerCase().endsWith("@gmail.com")) {
+                        toast.error("Only Gmail addresses (@gmail.com) are allowed for registration")
                         return
                       }
                       setLoading(true)
@@ -465,19 +336,19 @@ export default function RegisterPage() {
               </div>
             )}
 
-            {/* Step 4: Verification - Based on Entity Type */}
+            {/* Step 4: Verification & Document Upload */}
             {step === 4 && (
               <div className="flex flex-col gap-5">
-                {/* Company: GSTIN Verification */}
+                {/* Company: GSTIN & Certificate Upload */}
                 {form.entityType === "company" && (
                   <>
                     <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
                       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                         <Building2 className="h-4 w-4 text-primary" />
-                        GSTIN Verification
+                        GSTIN Details & Certificate
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Verified against the Government GST Portal in real-time
+                        Provide your 15-character GSTIN and upload the registration certificate
                       </p>
                     </div>
 
@@ -490,68 +361,23 @@ export default function RegisterPage() {
                           maxLength={15}
                           value={form.gstin}
                           onChange={(e) => updateForm("gstin", e.target.value.toUpperCase())}
-                          className={`flex-1 font-mono uppercase tracking-wider ${verified ? "border-green-500" : verificationError ? "border-destructive" : ""}`}
-                          disabled={verifying}
+                          className="flex-1 font-mono uppercase tracking-wider"
                         />
-                        <Button
-                          onClick={verifyGstin}
-                          disabled={verifying || verified || form.gstin.length !== 15}
-                          className={verified ? "bg-green-600 hover:bg-green-700" : ""}
-                        >
-                          {verifying ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying</>
-                          ) : verified ? (
-                            <><CheckCircle2 className="mr-2 h-4 w-4" /> Verified</>
-                          ) : (
-                            "Verify"
-                          )}
-                        </Button>
                       </div>
-                      <p className="mt-1.5 text-xs text-muted-foreground">
-                        15-character GSTIN (e.g. 27AAPFU0939F1ZV)
-                      </p>
                     </div>
-
-                    {verificationError && (
-                      <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-                        <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-                        <p className="text-sm text-destructive">{verificationError}</p>
-                      </div>
-                    )}
-
-                    {verified && gstDetails && (
-                      <div className="rounded-lg border border-green-500/30 bg-green-500/10 dark:bg-green-500/20 p-4">
-                        <div className="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
-                          <CheckCircle2 className="h-4 w-4" />
-                          GSTIN Verified Successfully
-                        </div>
-                        <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">GSTIN</span>
-                            <p className="font-mono font-medium text-green-900 dark:text-green-100">{gstDetails.gstin}</p>
-                          </div>
-                          {gstDetails.legalName && (
-                            <div>
-                              <span className="text-muted-foreground">Legal Name</span>
-                              <p className="font-medium text-green-900 dark:text-green-100">{gstDetails.legalName}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
                   </>
                 )}
 
-                {/* Individual: Aadhaar Verification */}
+                {/* Individual: Aadhaar & Document Upload */}
                 {form.entityType === "individual" && (
                   <>
                     <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
                       <div className="flex items-center gap-2 text-sm font-medium text-foreground">
                         <ShieldCheck className="h-4 w-4 text-primary" />
-                        Aadhaar Card Verification
+                        Aadhaar Details & Document
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        Verified using the Government of India Verhoeff checksum algorithm (UIDAI standard)
+                        Provide your 12-digit Aadhaar number and upload a copy of the card
                       </p>
                     </div>
 
@@ -569,79 +395,17 @@ export default function RegisterPage() {
                             updateForm("aadhaarNumber", raw)
                             e.target.value = formatted
                           }}
-                          className={`flex-1 font-mono tracking-wider ${verified ? "border-green-500" : verificationError ? "border-destructive" : ""}`}
-                          disabled={verifying}
+                          className="flex-1 font-mono tracking-wider"
                         />
-                        <Button
-                          onClick={verifyAadhaar}
-                          disabled={verifying || verified || form.aadhaarNumber.length !== 12}
-                          className={verified ? "bg-green-600 hover:bg-green-700" : ""}
-                        >
-                          {verifying ? (
-                            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying</>
-                          ) : verified ? (
-                            <><CheckCircle2 className="mr-2 h-4 w-4" /> Verified</>
-                          ) : (
-                            "Verify"
-                          )}
-                        </Button>
                       </div>
-                      <p className="mt-1.5 text-xs text-muted-foreground">
-                        Enter your 12-digit Aadhaar number
-                      </p>
                     </div>
-
-                    {verificationError && (
-                      <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
-                        <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
-                        <p className="text-sm text-destructive">{verificationError}</p>
-                      </div>
-                    )}
-
-                    {verified && maskedAadhaar && (
-                      <div className="rounded-lg border border-green-500/30 bg-green-500/10 dark:bg-green-500/20 p-4">
-                        <div className="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
-                          <CheckCircle2 className="h-4 w-4" />
-                          Aadhaar Verified Successfully
-                        </div>
-                        <div className="mt-2 text-sm">
-                          <span className="text-muted-foreground">Masked Number</span>
-                          <p className="font-mono font-medium text-green-900 dark:text-green-100">{maskedAadhaar}</p>
-                        </div>
-                      </div>
-                    )}
                   </>
                 )}
 
-                <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep(3)}>Back</Button>
-                  <Button
-                    className="flex-1"
-                    onClick={() => setStep(5)}
-                    disabled={!verified}
-                  >
-                    Continue
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 5: Document Upload */}
-            {step === 5 && (
-              <div className="flex flex-col gap-5">
-                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <FileText className="h-4 w-4 text-primary" />
-                    Upload {form.entityType === "company" ? "GSTIN Certificate" : "Aadhaar Card"}
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Image format (JPEG, PNG, JPG), maximum file size 2MB
-                  </p>
-                </div>
-
+                {/* Shared Upload Area */}
                 <div>
                   <Label htmlFor="document" className="text-foreground">
-                    {form.entityType === "company" ? "GSTIN Certificate" : "Aadhaar Card"} (Image)
+                    {form.entityType === "company" ? "GSTIN Certificate" : "Aadhaar Card"} (Image or PDF)
                   </Label>
                   <div className="mt-1.5">
                     <div className={`flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-all ${uploadedFile ? "border-green-500 bg-green-500/10" : "border-border hover:border-primary/50"}`}>
@@ -649,7 +413,7 @@ export default function RegisterPage() {
                         ref={fileInputRef}
                         id="document"
                         type="file"
-                        accept="image/jpeg,image/jpg,image/png"
+                        accept="image/*,application/pdf"
                         className="hidden"
                         onChange={handleFileUpload}
                         disabled={uploadingFile}
@@ -681,94 +445,33 @@ export default function RegisterPage() {
                         >
                           <Upload className="h-10 w-10 text-muted-foreground" />
                           <p className="mt-2 text-sm font-medium text-foreground">Click to upload</p>
-                          <p className="text-xs text-muted-foreground">JPEG, PNG, JPG only, max 2MB</p>
+                          <p className="text-xs text-muted-foreground">Image or PDF only, max 5MB</p>
                         </label>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep(4)}>Back</Button>
+                <div className="flex gap-3 mt-2">
+                  <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep(3)}>Back</Button>
                   <Button
                     className="flex-1"
                     onClick={async () => {
-                      if (!uploadedFile) {
+                      if (form.entityType === "company" && form.gstin.length !== 15) {
+                        toast.error("Please enter a valid 15-character GSTIN")
+                        return
+                      }
+                      if (form.entityType === "individual" && form.aadhaarNumber.length !== 12) {
+                        toast.error("Please enter a valid 12-digit Aadhaar number")
+                        return
+                      }
+                      if (!uploadedFile || !uploadedFilePath) {
                         toast.error("Please upload the required document")
                         return
                       }
-                      if (form.role === "seller") {
-                        setStep(6)
-                      } else {
-                        await handleSubmit()
-                      }
+                      await handleSubmit()
                     }}
-                    disabled={!uploadedFile || uploadingFile || loading}
-                  >
-                    {form.role === "seller" ? "Continue" : loading ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finalizing...</>
-                    ) : (
-                      "Complete Registration"
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 6: Category Selection (Sellers Only) */}
-            {step === 6 && form.role === "seller" && (
-              <div className="flex flex-col gap-6">
-                <div className="rounded-lg border border-primary/20 bg-primary/5 p-4">
-                  <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-                    <Package className="h-4 w-4 text-primary" />
-                    Product Categories
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Select at least one category you deal in. You will receive inquiries for these products.
-                  </p>
-                </div>
-
-                <div className="grid gap-3 max-h-[300px] overflow-y-auto px-1">
-                  {fetchingProducts ? (
-                    <div className="flex items-center justify-center py-8">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : products.map((product) => (
-                    <div
-                      key={product.id}
-                      className={`flex items-start gap-3 rounded-lg border p-4 transition-all cursor-pointer ${form.selectedCategories.includes(product.name) ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}
-                      onClick={() => {
-                        const current = form.selectedCategories
-                        if (current.includes(product.name)) {
-                          setForm(prev => ({ ...prev, selectedCategories: current.filter(c => c !== product.name) }))
-                        } else {
-                          setForm(prev => ({ ...prev, selectedCategories: [...current, product.name] }))
-                        }
-                      }}
-                    >
-                      <Checkbox
-                        id={`cat-${product.id}`}
-                        checked={form.selectedCategories.includes(product.name)}
-                        className="mt-1"
-                      />
-                      <div className="flex-1">
-                        <Label
-                          htmlFor={`cat-${product.id}`}
-                          className="cursor-pointer text-sm font-medium text-foreground"
-                        >
-                          {product.name}
-                        </Label>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex gap-3 mt-2">
-                  <Button variant="outline" className="flex-1 bg-transparent" onClick={() => setStep(5)}>Back</Button>
-                  <Button
-                    className="flex-1"
-                    onClick={handleSubmit}
-                    disabled={loading || form.selectedCategories.length === 0}
+                    disabled={!uploadedFile || uploadingFile || loading || (form.entityType === "company" ? form.gstin.length !== 15 : form.aadhaarNumber.length !== 12)}
                   >
                     {loading ? (
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finalizing...</>
@@ -779,6 +482,7 @@ export default function RegisterPage() {
                 </div>
               </div>
             )}
+
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
               Already have an account?{" "}

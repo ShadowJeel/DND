@@ -9,8 +9,8 @@ import { getUserDisplayName } from "./store"
  * @param currentUserId - The ID of the currently logged-in user
  * @returns The display name to show
  */
-export function getDisplayNameForUser(userId: string, currentUserId: string): string {
-  return getUserDisplayName(userId, currentUserId)
+export async function getDisplayNameForUser(userId: string, currentUserId: string): Promise<string> {
+  return await getUserDisplayName(userId, currentUserId)
 }
 
 /**

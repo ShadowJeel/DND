@@ -7,7 +7,6 @@ import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
-import { useCart } from "@/lib/cart-context"
 import { cn } from "@/lib/utils"
 import {
   BarChart3,
@@ -21,6 +20,7 @@ import {
   User,
   X,
   BadgeCheck,
+  Package,
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -29,7 +29,6 @@ import { useState } from "react"
 const BUYER_NAV = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/inquiry/new", label: "New Inquiry", icon: FileText },
-  { href: "/dashboard/inquiry/cart", label: "My Cart", icon: ShoppingCart },
   { href: "/dashboard/inquiries", label: "My Inquiries", icon: ShoppingCart },
   { href: "/dashboard/settings", label: "Profile and Settings", icon: User },
 ]
@@ -38,12 +37,12 @@ const SELLER_NAV = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/seller/pending", label: "New Bidding Inquiries", icon: ShoppingCart },
   { href: "/dashboard/seller/my-offers", label: "My Bidding", icon: Tag },
+  { href: "/dashboard/seller/my-products", label: "My Products", icon: Package },
   { href: "/dashboard/settings", label: "Profile and Setting", icon: User },
 ]
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth()
-  const { cart } = useCart()
   const pathname = usePathname()
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -103,11 +102,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   <item.icon className="h-4 w-4" />
                   {item.label}
                 </div>
-                {item.href === "/dashboard/inquiry/cart" && cart.length > 0 && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                    {cart.length}
-                  </span>
-                )}
               </Link>
             )
           })}
@@ -155,16 +149,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="flex items-center gap-3">
             <div id="header-actions" className="flex items-center gap-2">
-              {isBuyer && (
-                <Button variant="outline" size="icon" onClick={() => router.push("/dashboard/inquiry/cart")} className="relative h-9 w-9 rounded-full bg-background border-border">
-                  <ShoppingCart className="h-4 w-4" />
-                  {cart.length > 0 && (
-                    <Badge className="absolute -top-2 -right-2 h-5 min-w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
-                      {cart.length}
-                    </Badge>
-                  )}
-                </Button>
-              )}
             </div>
             <ThemeToggle />
           </div>

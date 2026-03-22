@@ -7,6 +7,7 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = new URL(req.url)
         const productName = searchParams.get("productName")
+        const subProduct = searchParams.get("subProduct")
 
         if (!productName) {
             return NextResponse.json({ error: "productName required" }, { status: 400 })
@@ -25,10 +26,27 @@ export async function GET(req: Request) {
         const productId = productData.product_id?.toString() || productDoc.id
 
         // Then get its options
-        const optionsQuery = query(collection(db, "product_options"), where("product_id", "==", String(productId)))
-        const optionsSnap = await getDocs(optionsQuery)
+        let optionsQuery;
+        if (subProduct) {
+            optionsQuery = query(
+                collection(db, "product_options"),
+                where("product_id", "==", String(productId)),
+                where("sub_product", "==", subProduct)
+            );
+        } else {
+            // Fetch all options for the product, then filter in-memory to catch missing, null, or empty sub_product fields securely.
+            optionsQuery = query(
+                collection(db, "product_options"),
+                where("product_id", "==", String(productId))
+            );
+        }
 
-        const optionsData = optionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[]
+        const optionsSnap = await getDocs(optionsQuery)
+        let optionsData = optionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as any[]
+
+        if (!subProduct) {
+            optionsData = optionsData.filter(o => !o.sub_product);
+        }
 
         // Explicit sorting: Checkbox > Dropdown > number > text, then alphabetical
         const typePriority: Record<string, number> = {
@@ -47,6 +65,13 @@ export async function GET(req: Request) {
             }
 
             return (a.option_name || "").localeCompare(b.option_name || "")
+        })
+
+        // Sort dropdown_values alphabetically for each option
+        optionsData.forEach(opt => {
+            if (opt.dropdown_values && Array.isArray(opt.dropdown_values)) {
+                opt.dropdown_values.sort((a: string, b: string) => String(a).localeCompare(String(b)))
+            }
         })
 
         return NextResponse.json(optionsData)

@@ -3,8 +3,6 @@
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth-context"
 
-import { CartProvider } from "@/lib/cart-context"
-
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
@@ -14,9 +12,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       storageKey="dnd-purchase-theme"
       disableTransitionOnChange
     >
-      <CartProvider>
-        <AuthProvider>{children}</AuthProvider>
-      </CartProvider>
+      <AuthProvider>{children}</AuthProvider>
     </ThemeProvider>
   )
 }

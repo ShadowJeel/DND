@@ -1,0 +1,22 @@
+[2026-03-21T18:29:42.108Z] INFO New offer submitted {"inquiryId":"INQ-0001"}
+[2026-03-21T18:29:42.484Z] ERROR Failed to send notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-03-21T18:46:30.487Z] INFO Accepted offer routine started {"offerId":"OFR-0005"}
+[2026-03-21T18:46:30.665Z] ERROR Failed to send notification for acceptance {"error":"Missing or insufficient permissions."}
+[2026-03-21T18:48:04.566Z] INFO New offer submitted {"inquiryId":"INQ-0001"}
+[2026-03-21T18:48:04.703Z] ERROR Failed to send notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-03-21T19:03:54.469Z] INFO New offer submitted {"inquiryId":"INQ-0001"}
+[2026-03-21T19:03:54.720Z] ERROR Failed to send notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-03-21T19:14:59.673Z] INFO New offer submitted {"inquiryId":"INQ-0001"}
+[2026-03-21T19:14:59.948Z] ERROR Failed to send notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-03-21T19:15:47.178Z] INFO Accepted offer routine started {"offerId":"OFR-0001"}
+[2026-03-21T19:15:47.294Z] ERROR Failed to send notification for acceptance {"error":"Missing or insufficient permissions."}
+[2026-03-21T19:16:13.418Z] INFO Accepted offer routine started {"offerId":"OFR-0001"}
+[2026-03-21T19:16:13.521Z] ERROR Failed to send notification for acceptance {"error":"Missing or insufficient permissions."}
+[2026-03-21T19:16:22.156Z] INFO Accepted offer routine started {"offerId":"OFR-0001"}
+[2026-03-21T19:16:22.271Z] ERROR Failed to send notification for acceptance {"error":"Missing or insufficient permissions."}
+[2026-03-21T19:26:51.718Z] INFO New offer submitted {"inquiryId":"INQ-0004"}
+[2026-03-21T19:26:51.974Z] ERROR Failed to send notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-03-21T19:28:07.522Z] INFO Accepted offer routine started {"offerId":"OFR-0002"}
+[2026-03-21T19:28:07.618Z] ERROR Failed to send notification for acceptance {"error":"Missing or insufficient permissions."}
+[2026-03-21T19:28:15.494Z] INFO Accepted offer routine started {"offerId":"OFR-0002"}
+[2026-03-21T19:28:15.600Z] ERROR Failed to send notification for acceptance {"error":"Missing or insufficient permissions."}

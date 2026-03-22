@@ -21,6 +21,9 @@ interface AuthUser {
   googleConnected: boolean
   createdAt: string;
   categories?: string[]
+  productManufacturers?: Record<string, string[]>
+  sellerProductOptions?: Record<string, Record<string, any>>
+  availableLocations?: Record<string, string[]>
   smsNotificationsEnabled: boolean;
 }
 

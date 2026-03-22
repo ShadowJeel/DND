@@ -12,6 +12,7 @@ import { linkWithPopup, GoogleAuthProvider } from "firebase/auth"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { updateUser, getProducts } from "@/lib/store"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export default function SettingsPage() {
     const { user, updateUserData, connectGoogle } = useAuth()
@@ -24,15 +25,19 @@ export default function SettingsPage() {
         phone: user?.phone || "",
         company: user?.company || "",
         categories: user?.categories || [] as string[],
+        productManufacturers: user?.productManufacturers || {} as Record<string, string[]>,
         // smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
     })
     const [availableProducts, setAvailableProducts] = useState<{ id: string, name: string }[]>([])
+    const [allManufacturers, setAllManufacturers] = useState<Record<string, string[]>>({})
 
     useEffect(() => {
         const fetchCats = async () => {
             try {
-                const data = await getProducts()
+                const { getProducts, getAllProductManufacturers } = await import("@/lib/store")
+                const [data, mfgData] = await Promise.all([getProducts(), getAllProductManufacturers()])
                 setAvailableProducts(data)
+                setAllManufacturers(mfgData)
             } catch (err) {
                 logger.error("Failed to fetch products for settings", { error: (err as Error).message })
             }
@@ -48,9 +53,10 @@ export default function SettingsPage() {
             phone: user?.phone || "",
             company: user?.company || "",
             categories: user?.categories || [],
+            productManufacturers: user?.productManufacturers || {},
             //smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
         })
-        setIsEditing(true)
+        setIsEditing(!isEditing)
     }
 
     const handleCancel = () => {
@@ -61,6 +67,7 @@ export default function SettingsPage() {
             phone: user?.phone || "",
             company: user?.company || "",
             categories: user?.categories || [],
+            productManufacturers: user?.productManufacturers || {},
             //smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
         })
         setIsEditing(false)
@@ -183,82 +190,7 @@ export default function SettingsPage() {
                                     />
                                 </div>
 
-                                {user?.role === "seller" && (
-                                    <div className="space-y-4 col-span-2 mt-4 border-t pt-4">
-                                        <div className="flex items-center justify-between">
-                                            <Label className="flex items-center gap-2 text-base font-semibold">
-                                                <Package className="h-5 w-5 text-primary" />
-                                                Products I Sell
-                                            </Label>
-                                            <span className="text-xs text-muted-foreground">
-                                                {formData.categories.length} product(s) selected
-                                            </span>
-                                        </div>
 
-                                        <div className="space-y-3">
-                                            {/* Currently Selected Products */}
-                                            <div className="flex flex-wrap gap-2">
-                                                {formData.categories.map((catName) => (
-                                                    <div
-                                                        key={catName}
-                                                        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary border border-primary/20 text-sm font-medium group"
-                                                    >
-                                                        {catName}
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    categories: formData.categories.filter(c => c !== catName)
-                                                                })
-                                                            }}
-                                                            className="text-primary/40 hover:text-destructive transition-colors"
-                                                            title="Remove product"
-                                                        >
-                                                            <X className="h-3.5 w-3.5" />
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                                {formData.categories.length === 0 && (
-                                                    <p className="text-sm text-muted-foreground italic">No products selected yet. Please add products you deal in.</p>
-                                                )}
-                                            </div>
-
-                                            {/* Add New Product Selector */}
-                                            <div className="pt-2">
-                                                <Label htmlFor="add-product" className="text-xs text-muted-foreground mb-1.5 block font-medium">Add a product to your list</Label>
-                                                <div className="flex gap-2">
-                                                    <select
-                                                        id="add-product"
-                                                        className="flex h-9 w-full max-w-xs rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                                        onChange={(e) => {
-                                                            const val = e.target.value
-                                                            if (val && !formData.categories.includes(val)) {
-                                                                setFormData({
-                                                                    ...formData,
-                                                                    categories: [...formData.categories, val]
-                                                                })
-                                                            }
-                                                            e.target.value = "" // Reset select
-                                                        }}
-                                                    >
-                                                        <option value="">Select a product to add...</option>
-                                                        {availableProducts
-                                                            .filter(p => !formData.categories.includes(p.name))
-                                                            .map(p => (
-                                                                <option key={p.id} value={p.name}>{p.name}</option>
-                                                            ))
-                                                        }
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <p className="text-xs text-muted-foreground border-l-2 border-primary/30 pl-2 py-1">
-                                            Note: You will only receive inquiries for the products listed above. You can add or remove products at any time.
-                                        </p>
-                                    </div>
-                                )}
                             </div>
 
                             {/* 
@@ -355,22 +287,7 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                             )}
-                            {user?.role === "seller" && (
-                                <div className="col-span-2">
-                                    <label className="text-sm font-medium text-muted-foreground">Product Categories</label>
-                                    <div className="flex flex-wrap gap-2 mt-2">
-                                        {user.categories && user.categories.length > 0 ? (
-                                            user.categories.map((cat) => (
-                                                <span key={cat} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
-                                                    {cat}
-                                                </span>
-                                            ))
-                                        ) : (
-                                            <p className="text-sm text-muted-foreground italic">No categories selected</p>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
+
 
                             {/* 
                             <div className="col-span-2 border-t pt-4">

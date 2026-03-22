@@ -9,18 +9,21 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/lib/auth-context"
 import { Clock, FileText, Gavel, Package, Send, MapPin, Edit, Trash2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { toast } from "sonner"
 import useSWR from "swr"
 import { getOpenInquiries, getOffersBySellerId, createOffer, updateOffer, deleteOffer } from "@/lib/store"
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { storage } from "@/lib/firebase"
-import { formatOptionLabel } from "@/lib/utils"
+import { formatOptionType, formatOptionLabel } from "@/lib/utils"
+// We need to import Select components as well. Wait, I should import them from ui.
 interface InquiryItem {
   id: string
   product: string
+  sub_product?: string
   paymentTerms: string
   options?: Record<string, string | string[]>
 }
@@ -46,6 +49,59 @@ export default function SellerPendingPage() {
     () => getOpenInquiries(),
     { refreshInterval: 5000 }
   )
+
+  const filteredInquiries = useMemo(() => {
+    if (!inquiries || !user) return []
+    if (!Array.isArray(inquiries)) return []
+
+    return inquiries.filter((inq: Inquiry) => {
+      // 1. PRODUCT CATEGORY MATCH
+      const sellerCategories = user.categories || []
+      const matchingItems = inq.items.filter(item => sellerCategories.includes(item.product))
+
+      if (matchingItems.length === 0) return false
+
+      // 2. LOCATION MATCH
+      if (inq.state || inq.district) {
+        const sellerLocs = user.availableLocations || {}
+        if (!sellerLocs[inq.state]) return false
+
+        if (inq.district) {
+          const sellerDistrictsForState = sellerLocs[inq.state]
+          if (sellerDistrictsForState.length > 0 && !sellerDistrictsForState.includes(inq.district)) {
+            return false
+          }
+        }
+      }
+
+      // 3. PRODUCT OPTIONS EXACT MATCH
+      const sellerOptionsData = user.sellerProductOptions || {}
+
+      const hasValidOptionMatch = matchingItems.some(item => {
+        const itemSellerOpts = sellerOptionsData[item.product] || {}
+
+        for (const [optName, sellerVal] of Object.entries(itemSellerOpts)) {
+          const sellerValsArr = Array.isArray(sellerVal) ? sellerVal : [sellerVal].filter(Boolean)
+
+          if (sellerValsArr.length > 0) {
+            const buyerVal = (item.options || {})[optName]
+
+            if (buyerVal !== undefined && buyerVal !== null && String(buyerVal).trim() !== "") {
+              const buyerValsArr = Array.isArray(buyerVal) ? buyerVal : [buyerVal].filter(Boolean)
+              const intersects = buyerValsArr.some(bv => sellerValsArr.includes(bv))
+
+              if (!intersects) return false
+            }
+          }
+        }
+        return true
+      })
+
+      if (!hasValidOptionMatch) return false
+
+      return true
+    })
+  }, [inquiries, user])
   const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null)
   const [quoteItem, setQuoteItem] = useState<InquiryItem | null>(null)
   const [pricePerTon, setPricePerTon] = useState("")
@@ -56,6 +112,14 @@ export default function SellerPendingPage() {
   const [editingOffer, setEditingOffer] = useState<any>(null)
   const [selectedPdf, setSelectedPdf] = useState<File | null>(null)
   const [pdfUploadProgress, setPdfUploadProgress] = useState(false)
+  const [sellerProductOptions, setSellerProductOptions] = useState<any[]>([])
+  const [sellerOptionsState, setSellerOptionsState] = useState<Record<string, string | string[]>>({})
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+
+  // Dispatch Location mapping
+  const [locationSettings, setLocationSettings] = useState<any>(null)
+  const [locations, setLocations] = useState<any[]>([])
+  const [dispatchLocation, setDispatchLocation] = useState({ state: "", district: "" })
 
   const { data: myOffers } = useSWR(
     user ? `seller-offers-${user.id}` : null,
@@ -69,11 +133,73 @@ export default function SellerPendingPage() {
     setContactPhone(user.phone || "")
   }
 
+  useEffect(() => {
+    fetch("/api/locations").then(r => r.json()).then(data => {
+      if (Array.isArray(data)) setLocations(data)
+    }).catch(console.error)
+
+    import("firebase/firestore").then(({ doc, getDoc }) => {
+      import("@/lib/firebase").then(({ db }) => {
+        getDoc(doc(db, "settings", "location")).then((snap) => {
+          if (snap.exists()) setLocationSettings(snap.data())
+        }).catch(console.error)
+      })
+    })
+  }, [])
+
+  useEffect(() => {
+    if (quoteItem && quoteItem.product) {
+      const url = `/api/products/options?productName=${encodeURIComponent(quoteItem.product)}${quoteItem.sub_product ? `&subProduct=${encodeURIComponent(quoteItem.sub_product)}` : ""}`
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            const mappedOptions = data.map((opt: any) => ({
+              ...opt,
+              seller_option_type: opt.seller_option_type || (opt.form_type === 'seller' ? opt.option_type : 'none')
+            })).filter((opt: any) => opt.seller_option_type !== 'none');
+            setSellerProductOptions(mappedOptions);
+          } else {
+            setSellerProductOptions([]);
+          }
+        })
+        .catch(() => setSellerProductOptions([]))
+    } else {
+      setSellerProductOptions([])
+    }
+  }, [quoteItem?.product, quoteItem?.sub_product])
+
+  const updateSellerOption = (optionName: string, value: string | string[]) => {
+    setSellerOptionsState(prev => ({
+      ...prev,
+      [optionName]: value
+    }))
+  }
+
+  const toggleSellerCheckbox = (optionName: string, value: string) => {
+    setSellerOptionsState(prev => {
+      const currentOptions = prev[optionName] as string[] || [];
+      let newOptions;
+      if (currentOptions.includes(value)) {
+        newOptions = currentOptions.filter(v => v !== value);
+      } else {
+        newOptions = [...currentOptions, value];
+      }
+      return {
+        ...prev,
+        [optionName]: newOptions
+      }
+    })
+  }
+
   const submitQuote = async () => {
     if (!pricePerTon || !quoteItem || !selectedInquiry) {
       toast.error("Please enter a price per ton")
       return
     }
+
+    // Validation for Seller Options and Dispatch Location has been removed by request.
+
     setSubmitting(true)
     try {
       let finalPdfUrl = editingOffer ? editingOffer.pdfUrl || "" : ""
@@ -94,6 +220,7 @@ export default function SellerPendingPage() {
           pdfUrl: finalPdfUrl,
           contactEmail,
           contactPhone,
+          sellerOptions: {},
         })
         toast.success("Quote updated successfully!")
       } else {
@@ -108,6 +235,7 @@ export default function SellerPendingPage() {
           pdfUrl: finalPdfUrl || "/dummy-quote.pdf", // Simulated PDF if skipped
           contactEmail,
           contactPhone,
+          sellerOptions: {},
           status: "pending" as const
         }
         await createOffer(payload);
@@ -135,6 +263,7 @@ export default function SellerPendingPage() {
     } finally {
       setSubmitting(false)
       setPdfUploadProgress(false)
+      setShowConfirmDialog(false)
     }
   }
 
@@ -153,8 +282,13 @@ export default function SellerPendingPage() {
       toast.error("Failed to delete quote")
     } finally {
       setSubmitting(false)
+      setShowConfirmDialog(false)
     }
   }
+
+  const requestedQuantityRaw = quoteItem?.options?.["Quantity"] || quoteItem?.options?.["Qty"] || quoteItem?.options?.["quantity"];
+  const requestedQuantity = parseFloat(String(requestedQuantityRaw).replace(/[^\d.]/g, '')) || 1;
+  const computedTotal = (Number(pricePerTon) || 0) * requestedQuantity;
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -167,7 +301,7 @@ export default function SellerPendingPage() {
 
       {isLoading ? (
         <div className="py-20 text-center text-muted-foreground">Loading inquiries...</div>
-      ) : !Array.isArray(inquiries) || inquiries.length === 0 ? (
+      ) : !Array.isArray(filteredInquiries) || filteredInquiries.length === 0 ? (
         <Card className="border-border">
           <CardContent className="flex flex-col items-center gap-3 py-16">
             <FileText className="h-10 w-10 text-muted-foreground/30" />
@@ -176,7 +310,7 @@ export default function SellerPendingPage() {
         </Card>
       ) : (
         <div className="flex flex-col gap-4">
-          {inquiries.map((inq: Inquiry) => (
+          {filteredInquiries.map((inq: Inquiry) => (
             <Card key={inq.id} className="border-border transition-all hover:border-primary/20">
               <CardHeader className="flex flex-row items-start justify-between pb-3 border-b border-border/50">
                 <div className="flex items-center gap-3">
@@ -213,7 +347,7 @@ export default function SellerPendingPage() {
                     <div key={item.id} className="flex flex-row items-center flex-wrap gap-2 rounded-lg bg-white/40 dark:bg-zinc-800/40 backdrop-blur-md p-3 md:p-4 text-sm border border-white/20 shadow-sm transition-all hover:shadow-md">
                       <div className="flex items-center gap-2 font-semibold text-foreground shrink-0 bg-primary/10 px-2.5 py-1 rounded-md">
                         <Package className="h-4 w-4 text-primary" />
-                        {item.product}
+                        {item.product} {item.sub_product && <span className="text-muted-foreground font-normal">({item.sub_product})</span>}
                       </div>
                       <div className="text-muted-foreground/30 mx-1">|</div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-muted-foreground">
@@ -227,12 +361,13 @@ export default function SellerPendingPage() {
                   ))}
                 </div>
 
-                {inq.deliveryAddress && (
+                {(inq.state || inq.district) && (
                   <div className="mb-4 flex items-start gap-2 text-xs text-muted-foreground bg-primary/5 p-3 rounded-md border border-primary/10">
                     <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold text-foreground block mb-0.5">Delivery Location:</span>
-                      {inq.deliveryAddress}, {inq.district}, {inq.state} - {inq.pinCode}
+                      {[inq.district, inq.state].filter(Boolean).join(", ")}
+                      {inq.pinCode ? ` - ${inq.pinCode}` : ""}
                     </div>
                   </div>
                 )}
@@ -268,16 +403,14 @@ export default function SellerPendingPage() {
           {selectedInquiry && !quoteItem && (
             <div className="mt-4 space-y-6">
               {/* Delivery Info Box */}
-              {selectedInquiry.deliveryAddress && (
+              {(selectedInquiry.state || selectedInquiry.district) && (
                 <div className="bg-muted/30 rounded-lg p-4 border border-border">
                   <h4 className="flex items-center gap-2 font-medium text-sm text-foreground mb-2">
                     <MapPin className="h-4 w-4 text-primary" /> Delivery Information
                   </h4>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    <strong>Address:</strong> {selectedInquiry.deliveryAddress}<br />
-                    <strong>District:</strong> {selectedInquiry.district} &nbsp;|&nbsp;
-                    <strong>State:</strong> {selectedInquiry.state} &nbsp;|&nbsp;
-                    <strong>Pin Code:</strong> {selectedInquiry.pinCode}
+                  <p className="text-sm text-muted-foreground leading-relaxed flex flex-wrap gap-x-4 gap-y-1">
+                    {selectedInquiry.district && <span><strong>District:</strong> {selectedInquiry.district}</span>}
+                    {selectedInquiry.state && <span><strong>State:</strong> {selectedInquiry.state}</span>}
                   </p>
                 </div>
               )}
@@ -288,7 +421,7 @@ export default function SellerPendingPage() {
                     <TableRow>
                       <TableHead className="text-foreground font-semibold">Product</TableHead>
                       <TableHead className="text-foreground font-semibold">Specifications</TableHead>
-                      <TableHead className="text-foreground font-semibold">Terms</TableHead>
+
                       <TableHead className="text-right text-foreground font-semibold">Action</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -301,6 +434,7 @@ export default function SellerPendingPage() {
                         <TableRow key={item.id} className="border-border">
                           <TableCell className="font-medium text-foreground align-top pt-4">
                             {item.product}
+                            {item.sub_product && <div className="text-[10px] text-muted-foreground font-normal">({item.sub_product})</div>}
                           </TableCell>
                           <TableCell className="text-muted-foreground text-xs pt-4">
                             <div className="flex flex-wrap gap-2">
@@ -317,11 +451,7 @@ export default function SellerPendingPage() {
                               })}
                             </div>
                           </TableCell>
-                          <TableCell className="text-muted-foreground text-xs align-top pt-4">
-                            <div className="space-y-1">
-                              <div><span className="font-medium">Payment:</span> {item.paymentTerms ? `${item.paymentTerms} Days` : "-"}</div>
-                            </div>
-                          </TableCell>
+
                           <TableCell className="text-right align-top pt-4">
                             {itemOffer ? (
                               <Button
@@ -336,6 +466,13 @@ export default function SellerPendingPage() {
                                   setContactEmail(itemOffer.contactEmail || user?.email || "")
                                   setContactPhone(itemOffer.contactPhone || user?.phone || "")
                                   setQuoteComments(itemOffer.comments || "")
+
+                                  const { dispatch_state, dispatch_district, ...restOptions } = itemOffer.sellerOptions || {} as any;
+                                  setSellerOptionsState(restOptions || {})
+                                  setDispatchLocation({
+                                    state: dispatch_state || "",
+                                    district: dispatch_district || ""
+                                  })
                                 }}
                               >
                                 {isAccepted ? <><FileText className="h-3 w-3" /> View Quote</> : <><Edit className="h-3 w-3" /> Edit quote</>}
@@ -349,6 +486,8 @@ export default function SellerPendingPage() {
                                 setContactEmail(user?.email || "")
                                 setContactPhone(user?.phone || "")
                                 setQuoteComments("")
+                                setSellerOptionsState({})
+                                setDispatchLocation({ state: "", district: "" })
                               }}>
                                 <Send className="h-3 w-3" /> Offer Quote
                               </Button>
@@ -369,7 +508,7 @@ export default function SellerPendingPage() {
                 <div className="flex items-center justify-between mb-3 border-b border-border pb-3">
                   <h4 className="text-base font-semibold text-foreground flex items-center gap-2">
                     <Package className="h-4 w-4 text-primary" />
-                    {editingOffer ? "Quote Details for:" : "Quoting for:"} {quoteItem.product}
+                    {editingOffer ? "Quote Details for:" : "Quoting for:"} {quoteItem.product} {quoteItem.sub_product && <span className="text-muted-foreground font-normal">({quoteItem.sub_product})</span>}
                   </h4>
                   {editingOffer?.status === "accepted" && (
                     <span className="text-sm font-medium text-green-600 bg-green-50 px-2.5 py-1 rounded-md border border-green-200">
@@ -394,118 +533,155 @@ export default function SellerPendingPage() {
                       })}
                     </div>
                   </div>
-                  {selectedInquiry?.deliveryAddress && (
+                  {(selectedInquiry?.state || selectedInquiry?.district) && (
                     <div className="space-y-1.5 border-t sm:border-t-0 sm:border-l border-border pt-4 sm:pt-0 sm:pl-4">
                       <strong className="text-foreground/80 block text-xs uppercase tracking-wider">Delivery Details</strong>
-                      <div className="text-muted-foreground">{selectedInquiry.district}, {selectedInquiry.state} - {selectedInquiry.pinCode}</div>
+                      <div className="text-muted-foreground">{[selectedInquiry.district, selectedInquiry.state].filter(Boolean).join(", ")}</div>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-foreground font-medium">Price per Ton (INR) <span className="text-red-500">*</span></Label>
-                  <Input
-                    type="number"
-                    placeholder="e.g. 48500"
-                    value={pricePerTon}
-                    onChange={(e) => setPricePerTon(e.target.value)}
-                    className="h-11 text-lg font-medium"
-                    disabled={editingOffer?.status === "accepted"}
-                  />
+
+
+              {showConfirmDialog ? (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-6 space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground text-center mb-2">Confirm Your Offer</h3>
+                  <div className="bg-background rounded-md border border-border p-4 space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Price per Piece/Ton:</span>
+                      <span className="font-semibold">₹ {Number(pricePerTon).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-muted-foreground">Requested Quantity:</span>
+                      <span className="font-semibold">{requestedQuantity}</span>
+                    </div>
+                    <div className="border-t border-border pt-3 flex justify-between items-center bg-muted/20 mt-1 rounded-sm">
+                      <span className="text-foreground font-medium pl-2">Total Price:</span>
+                      <span className="text-xl font-bold text-primary pr-2">₹ {computedTotal.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <Button variant="outline" className="flex-1" onClick={() => setShowConfirmDialog(false)}>
+                      Back to Edit
+                    </Button>
+                    <Button className="flex-1" onClick={submitQuote} disabled={submitting}>
+                      {submitting ? "Processing..." : (editingOffer ? "Confirm Update" : "Confirm & Submit")}
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-foreground font-medium">Official Quotation PDF (Max 5MB)</Label>
-                  <div className={`flex h-11 w-full items-center justify-center rounded-md border border-dashed border-input bg-muted/30 px-3 py-2 text-sm text-muted-foreground transition-colors ${(editingOffer?.status !== "accepted" && !submitting) ? "hover:bg-muted/50 cursor-pointer" : "opacity-60 cursor-not-allowed"}`}>
-                    <label className={`flex w-full items-center justify-center gap-2 ${(editingOffer?.status !== "accepted" && !submitting) ? "cursor-pointer" : "cursor-not-allowed"}`}>
-                      <FileText className="h-4 w-4 shrink-0 transition-colors" />
-                      <span className="truncate">{selectedPdf ? selectedPdf.name : "Upload PDF Quote"}</span>
-                      <input
-                        type="file"
-                        accept=".pdf"
-                        className="hidden"
-                        disabled={editingOffer?.status === "accepted" || submitting}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            if (file.size > 5 * 1024 * 1024) {
-                              toast.error("PDF file must be less than 5MB");
-                              e.target.value = '';
-                            } else {
-                              setSelectedPdf(file);
-                              toast.success("PDF attached to quote");
-                            }
-                          }
-                        }}
+              ) : (
+                <>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-foreground font-medium">Price per Piece/Ton (INR) <span className="text-red-500">*</span></Label>
+                      <Input
+                        type="number"
+                        placeholder="e.g. 48500"
+                        value={pricePerTon}
+                        onChange={(e) => setPricePerTon(e.target.value)}
+                        className="h-11 text-lg font-medium"
+                        disabled={editingOffer?.status === "accepted"}
                       />
-                    </label>
-                  </div>
-                  {editingOffer?.pdfUrl && editingOffer.pdfUrl !== "" && editingOffer.pdfUrl !== "/dummy-quote.pdf" && !selectedPdf && (
-                    <div className="text-xs text-muted-foreground mt-1 text-right">
-                      <a href={editingOffer.pdfUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline font-medium">View uploaded PDF</a>
+                      {pricePerTon && Number(pricePerTon) > 0 && (
+                        <div className="text-sm font-medium text-primary mt-1">
+                          Total (Est): ₹ {computedTotal.toLocaleString('en-IN')}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 border-t border-border pt-5">
-                <div>
-                  <Label className="text-foreground">Contact Email (Read-only)</Label>
-                  <Input
-                    type="email"
-                    placeholder="sales@company.com"
-                    value={contactEmail}
-                    readOnly
-                    className="mt-1 bg-muted cursor-not-allowed"
-                    disabled={editingOffer?.status === "accepted"}
-                  />
-                </div>
-                <div>
-                  <Label className="text-foreground">Contact Phone</Label>
-                  <Input
-                    type="tel"
-                    placeholder="+91 98765 43210"
-                    value={contactPhone}
-                    onChange={(e) => setContactPhone(e.target.value)}
-                    className="mt-1"
-                    disabled={editingOffer?.status === "accepted"}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-foreground">Additional Comments / Terms</Label>
-                <Textarea
-                  placeholder="e.g. Validity of quote, specific delivery timeline, material source..."
-                  value={quoteComments}
-                  onChange={(e) => setQuoteComments(e.target.value)}
-                  className="mt-1"
-                  rows={3}
-                  disabled={editingOffer?.status === "accepted"}
-                />
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Button variant="outline" className="flex-1 h-11" onClick={() => { setQuoteItem(null); setEditingOffer(null); setSelectedPdf(null); }}>
-                  Cancel & Back to Items
-                </Button>
-                {editingOffer && editingOffer.status !== "accepted" && (
-                  <Button variant="destructive" className="flex-1 h-11 gap-2 border border-destructive/20 hover:bg-destructive shadow-sm" onClick={handleDeleteQuote} disabled={submitting}>
-                    <Trash2 className="h-4 w-4" /> Delete Quote
-                  </Button>
-                )}
-                {(!editingOffer || editingOffer.status !== "accepted") ? (
-                  <Button className="flex-1 h-11 gap-2" onClick={submitQuote} disabled={submitting}>
-                    {!submitting && (editingOffer ? <Edit className="h-4 w-4" /> : <Send className="h-4 w-4" />)}
-                    {submitting ? (pdfUploadProgress ? "Uploading PDF..." : "Processing...") : (editingOffer ? "Update Quote" : "Submit Quote securely")}
-                  </Button>
-                ) : (
-                  <div className="flex-1 flex items-center justify-center p-2 bg-green-50 text-green-700 rounded-md border border-green-200 font-medium">
-                    Quote Accepted - Cannot be modified
+                    <div className="space-y-2">
+                      <Label className="text-foreground font-medium">Official Quotation PDF (Max 5MB)</Label>
+                      <div className={`flex h-11 w-full items-center justify-center rounded-md border border-dashed border-input bg-muted/30 px-3 py-2 text-sm text-muted-foreground transition-colors ${(editingOffer?.status !== "accepted" && !submitting) ? "hover:bg-muted/50 cursor-pointer" : "opacity-60 cursor-not-allowed"}`}>
+                        <label className={`flex w-full items-center justify-center gap-2 ${(editingOffer?.status !== "accepted" && !submitting) ? "cursor-pointer" : "cursor-not-allowed"}`}>
+                          <FileText className="h-4 w-4 shrink-0 transition-colors" />
+                          <span className="truncate">{selectedPdf ? selectedPdf.name : "Upload PDF Quote"}</span>
+                          <input
+                            type="file"
+                            accept=".pdf"
+                            className="hidden"
+                            disabled={editingOffer?.status === "accepted" || submitting}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                if (file.size > 5 * 1024 * 1024) {
+                                  toast.error("PDF file must be less than 5MB");
+                                  e.target.value = '';
+                                } else {
+                                  setSelectedPdf(file);
+                                  toast.success("PDF attached to quote");
+                                }
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+                      {editingOffer?.pdfUrl && editingOffer.pdfUrl !== "" && editingOffer.pdfUrl !== "/dummy-quote.pdf" && !selectedPdf && (
+                        <div className="text-xs text-muted-foreground mt-1 text-right">
+                          <a href={editingOffer.pdfUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline font-medium">View uploaded PDF</a>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2 border-t border-border pt-5">
+                    <div>
+                      <Label className="text-foreground">Contact Email (Read-only)</Label>
+                      <Input
+                        type="email"
+                        placeholder="sales@company.com"
+                        value={contactEmail}
+                        readOnly
+                        className="mt-1 bg-muted cursor-not-allowed"
+                        disabled={editingOffer?.status === "accepted"}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-foreground">Contact Phone</Label>
+                      <Input
+                        type="tel"
+                        placeholder="+91 98765 43210"
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                        className="mt-1"
+                        disabled={editingOffer?.status === "accepted"}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-foreground">Additional Comments / Terms</Label>
+                    <Textarea
+                      placeholder="e.g. Validity of quote, specific delivery timeline, material source..."
+                      value={quoteComments}
+                      onChange={(e) => setQuoteComments(e.target.value)}
+                      className="mt-1"
+                      rows={3}
+                      disabled={editingOffer?.status === "accepted"}
+                    />
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <Button variant="outline" className="flex-1 h-11" onClick={() => { setQuoteItem(null); setEditingOffer(null); setSelectedPdf(null); setShowConfirmDialog(false); }}>
+                      Cancel & Back to Items
+                    </Button>
+                    {editingOffer && editingOffer.status !== "accepted" && (
+                      <Button variant="destructive" className="flex-1 h-11 gap-2 border border-destructive/20 hover:bg-destructive shadow-sm" onClick={handleDeleteQuote} disabled={submitting}>
+                        <Trash2 className="h-4 w-4" /> Delete Quote
+                      </Button>
+                    )}
+                    {(!editingOffer || editingOffer.status !== "accepted") ? (
+                      <Button className="flex-1 h-11 gap-2" onClick={() => setShowConfirmDialog(true)} disabled={submitting || !pricePerTon || Number(pricePerTon) <= 0}>
+                        {!submitting && (editingOffer ? <Edit className="h-4 w-4" /> : <Send className="h-4 w-4" />)}
+                        {submitting ? (pdfUploadProgress ? "Uploading PDF..." : "Processing...") : (editingOffer ? "Proceed to Confirm" : "Proceed to Confirm")}
+                      </Button>
+                    ) : (
+                      <div className="flex-1 flex items-center justify-center p-2 bg-green-50 text-green-700 rounded-md border border-green-200 font-medium">
+                        Quote Accepted - Cannot be modified
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </DialogContent>

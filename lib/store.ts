@@ -26,12 +26,16 @@ export interface User {
   googleConnected: boolean
   createdAt: string
   categories?: string[]
+  productManufacturers?: Record<string, string[]>
+  sellerProductOptions?: Record<string, Record<string, any>>
+  availableLocations?: Record<string, string[]>
   smsNotificationsEnabled: boolean
 }
 
 export interface InquiryItem {
   id: string
   product: string
+  sub_product?: string
   paymentTerms: string
   options?: Record<string, string | string[]>
 }
@@ -41,13 +45,14 @@ export interface Inquiry {
   buyerId: string
   buyerName: string
   items: InquiryItem[]
-  status: "open" | "bidding" | "closed"
+  status: "open" | "bidding" | "closed" | "deleted"
   biddingDeadline?: string
   createdAt: string
   deliveryAddress?: string
   district?: string
   state?: string
   pinCode?: string
+  rebidCount?: number
 }
 
 export interface Offer {
@@ -56,6 +61,7 @@ export interface Offer {
   inquiryItemId: string
   sellerId: string
   sellerName: string
+  sellerAlias?: string
   anonymizedSeller?: string
   pricePerTon: number
   comments: string
@@ -67,6 +73,8 @@ export interface Offer {
   buyerName?: string
   buyerEmail?: string
   buyerPhone?: string
+  sellerOptions?: Record<string, string | string[]>
+  requestedQuantity?: number
   createdAt: string
 }
 
@@ -94,6 +102,13 @@ function mapBuyerFromDb(row: any, id: string): User {
 }
 
 function mapSellerFromDb(row: any, id: string): User {
+  const fallbackOptions: Record<string, Record<string, any>> = {};
+  if (!row.seller_product_options && row.product_manufacturers) {
+    Object.entries(row.product_manufacturers).forEach(([prod, mfgs]) => {
+      fallbackOptions[prod] = { "Manufacturer": mfgs }
+    })
+  }
+
   return {
     id: row.id || id,
     name: row.name,
@@ -113,6 +128,9 @@ function mapSellerFromDb(row: any, id: string): User {
     googleConnected: Boolean(row.google_connected),
     createdAt: row.created_at,
     categories: row.categories || [],
+    productManufacturers: row.product_manufacturers || {},
+    sellerProductOptions: row.seller_product_options || fallbackOptions,
+    availableLocations: row.available_locations || {},
     smsNotificationsEnabled: row.sms_notifications_enabled !== false, // default to true
   }
 }
@@ -126,6 +144,7 @@ async function mapInquiryFromDb(row: any, id: string): Promise<Inquiry> {
     return {
       id: item.id || docSnap.id,
       product: item.product,
+      sub_product: item.sub_product,
       paymentTerms: item.payment_terms,
       options: item.options || {},
     }
@@ -135,7 +154,16 @@ async function mapInquiryFromDb(row: any, id: string): Promise<Inquiry> {
   const offerSnap = await getDocs(offerQ)
 
   const hasAcceptedOffer = !offerSnap.empty
-  const derivedStatus = hasAcceptedOffer ? "closed" : row.status
+  let derivedStatus = row.status
+
+  if (row.status !== "deleted") {
+    derivedStatus = hasAcceptedOffer ? "closed" : row.status
+    if (derivedStatus === "bidding" && row.bidding_deadline) {
+      if (new Date() > new Date(row.bidding_deadline)) {
+        derivedStatus = "closed"
+      }
+    }
+  }
 
   return {
     id: row.id || id,
@@ -149,6 +177,7 @@ async function mapInquiryFromDb(row: any, id: string): Promise<Inquiry> {
     district: row.district || "",
     state: row.state || "",
     pinCode: row.pin_code || "",
+    rebidCount: row.rebid_count || 0,
   }
 }
 
@@ -169,6 +198,8 @@ function mapOfferFromDb(row: any, id: string): Offer {
     buyerName: row.buyer_name,
     buyerEmail: row.buyer_email,
     buyerPhone: row.buyer_phone,
+    sellerOptions: row.seller_options || {},
+    sellerAlias: row.seller_alias || null,
     createdAt: row.created_at,
   }
 }
@@ -226,6 +257,24 @@ async function getNextOfferId(): Promise<string> {
   const lastNum = parseInt(snap.docs[0].id.split("-")[1])
   if (isNaN(lastNum)) return "OFR-0001"
   return `OFR-${String(lastNum + 1).padStart(4, "0")}`
+}
+
+async function getNextSellerAlias(): Promise<string> {
+  const q = query(collection(db, "offers"), orderBy("seller_alias", "desc"), limit(1))
+  const snap = await getDocs(q)
+  if (snap.empty) return "Token-0000001"
+
+  const lastAlias = snap.docs[0].data().seller_alias;
+  if (!lastAlias) return "Token-0000001"
+
+  const lastNum = parseInt(lastAlias.split("-")[1])
+  if (isNaN(lastNum)) return "Token-0000001"
+
+  let nextNumStr = String(lastNum + 1)
+  if (nextNumStr.length < 7) {
+    nextNumStr = nextNumStr.padStart(7, "0")
+  }
+  return `Token-${nextNumStr}`
 }
 
 export async function registerUser(data: Omit<User, "id" | "verified" | "createdAt" | "displayName">): Promise<User> {
@@ -309,7 +358,8 @@ export async function registerUser(data: Omit<User, "id" | "verified" | "created
       created_at: createdAt,
       auth_uid: auth.currentUser?.uid || null,
       categories: data.categories || [],
-      sms_notifications_enabled: true,
+      product_manufacturers: data.productManufacturers || {},
+      smsNotificationsEnabled: true,
     })
 
     return {
@@ -331,6 +381,7 @@ export async function registerUser(data: Omit<User, "id" | "verified" | "created
       googleConnected: false,
       createdAt,
       categories: data.categories || [],
+      productManufacturers: data.productManufacturers || {},
       smsNotificationsEnabled: true,
     }
   }
@@ -471,6 +522,7 @@ export async function createInquiry(
       id: itemId,
       inquiry_id: inquiryId,
       product: item.product,
+      sub_product: (item as any).sub_product || null,
       payment_terms: item.paymentTerms,
       options: item.options || {},
     })
@@ -509,6 +561,9 @@ export async function getInquiriesByBuyerId(buyerId: string): Promise<Inquiry[]>
   const snap = await getDocs(q)
   let mapped = await Promise.all(snap.docs.map(d => mapInquiryFromDb(d.data(), d.id)))
 
+  // Filter out any internally soft deleted
+  mapped = mapped.filter(inq => inq.status !== "deleted")
+
   // Sort descending by created_at in memory to avoid needing a Firestore Composite Index
   mapped.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
@@ -540,6 +595,7 @@ export async function updateInquiryItem(inquiryId: string, itemId: string, data:
   const updateData: any = {}
   if (data.paymentTerms !== undefined) updateData.payment_terms = data.paymentTerms
   if (data.product !== undefined) updateData.product = data.product
+  if (data.sub_product !== undefined) updateData.sub_product = data.sub_product
   if (data.options !== undefined) updateData.options = data.options
 
   const q = query(collection(db, "inquiry_items"), where("id", "==", itemId), where("inquiry_id", "==", inquiryId), limit(1))
@@ -563,6 +619,27 @@ export async function closeInquiry(inquiryId: string): Promise<void> {
   if (!snap.empty) {
     await updateDoc(doc(db, "inquiries", snap.docs[0].id), { status: "closed" })
   }
+}
+
+export async function softDeleteInquiry(inquiryId: string, userId: string): Promise<void> {
+  const q = query(collection(db, "inquiries"), where("id", "==", inquiryId), limit(1))
+  const snap = await getDocs(q)
+  if (snap.empty) return;
+
+  const inqDoc = snap.docs[0]
+  const inqData = inqDoc.data()
+
+  const user = await getUserById(userId)
+
+  await setDoc(doc(db, "soft_deleted_inquiries", inquiryId), {
+    ...inqData,
+    deleted_by_user_id: user?.id || userId,
+    deleted_by_user_name: user?.name || "Unknown",
+    deleted_by_user_email: user?.email || "Unknown",
+    deleted_at: new Date().toISOString()
+  });
+
+  await updateDoc(inqDoc.ref, { status: "deleted" })
 }
 
 export async function reopenInquiry(inquiryId: string): Promise<void> {
@@ -627,9 +704,15 @@ export async function activateBidding(inquiryId: string, durationInDays: number)
   const q = query(collection(db, "inquiries"), where("id", "==", inquiryId), limit(1))
   const snap = await getDocs(q)
   if (!snap.empty) {
+    const data = snap.docs[0].data()
+    const currentRebidCount = data.rebid_count || 0
+    if (currentRebidCount >= 1) {
+      throw new Error("Re-bid can only be used once per inquiry")
+    }
     await updateDoc(doc(db, "inquiries", snap.docs[0].id), {
       status: "bidding",
-      bidding_deadline: deadline.toISOString()
+      bidding_deadline: deadline.toISOString(),
+      rebid_count: currentRebidCount + 1
     })
   }
 }
@@ -637,6 +720,16 @@ export async function activateBidding(inquiryId: string, durationInDays: number)
 export async function createOffer(data: Omit<Offer, "id" | "rank" | "createdAt">): Promise<Offer> {
   const id = await getNextOfferId()
   const createdAt = new Date().toISOString()
+
+  let alias = ""
+  const qAlias = query(collection(db, "offers"), where("inquiry_id", "==", data.inquiryId), where("seller_id", "==", data.sellerId), limit(1))
+  const snapAlias = await getDocs(qAlias)
+
+  if (!snapAlias.empty && snapAlias.docs[0].data().seller_alias) {
+    alias = snapAlias.docs[0].data().seller_alias
+  } else {
+    alias = await getNextSellerAlias()
+  }
 
   await setDoc(doc(db, "offers", id), {
     id,
@@ -649,11 +742,13 @@ export async function createOffer(data: Omit<Offer, "id" | "rank" | "createdAt">
     pdf_url: data.pdfUrl || null,
     contact_email: data.contactEmail || null,
     contact_phone: data.contactPhone || null,
+    seller_options: data.sellerOptions || {},
+    seller_alias: alias,
     status: data.status,
     created_at: createdAt,
   })
 
-  return { ...data, id, createdAt }
+  return { ...data, id, createdAt, sellerAlias: alias }
 }
 
 export async function updateOffer(offerId: string, data: Partial<Offer>): Promise<void> {
@@ -663,6 +758,7 @@ export async function updateOffer(offerId: string, data: Partial<Offer>): Promis
   if (data.pdfUrl !== undefined) updateData.pdf_url = data.pdfUrl
   if (data.contactEmail !== undefined) updateData.contact_email = data.contactEmail
   if (data.contactPhone !== undefined) updateData.contact_phone = data.contactPhone
+  if (data.sellerOptions !== undefined) updateData.seller_options = data.sellerOptions
 
   const q = query(collection(db, "offers"), where("id", "==", offerId), limit(1))
   const snap = await getDocs(q)
@@ -717,9 +813,17 @@ export async function getOffersByInquiryId(inquiryId: string): Promise<Offer[]> 
     }
     return {
       ...offer,
-      anonymizedSeller: `Seller ${sellerMap.get(offer.sellerId)}`
+      anonymizedSeller: offer.sellerAlias || `Seller ${sellerMap.get(offer.sellerId)}`
     }
   })
+}
+
+export async function revertOfferToPending(offerId: string): Promise<void> {
+  const q = query(collection(db, "offers"), where("id", "==", offerId), limit(1))
+  const snap = await getDocs(q)
+  if (!snap.empty) {
+    await updateDoc(doc(db, "offers", snap.docs[0].id), { status: "pending" })
+  }
 }
 
 export async function getOffersBySellerId(sellerId: string): Promise<Offer[]> {
@@ -728,6 +832,9 @@ export async function getOffersBySellerId(sellerId: string): Promise<Offer[]> {
   const offers = snap.docs.map(d => mapOfferFromDb(d.data(), d.id)).filter(o => o.status !== "deleted")
 
   offers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+  const sellerMap = new Map<string, number>()
+  let sellerCounter = 1
 
   const itemIds = [...new Set(offers.map(o => o.inquiryItemId))]
   if (itemIds.length > 0) {
@@ -738,25 +845,59 @@ export async function getOffersBySellerId(sellerId: string): Promise<Offer[]> {
       const chunk = itemIds.slice(i, i + chunkSize);
       const cQ = query(collection(db, "offers"), where("inquiry_item_id", "in", chunk))
       const cSnap = await getDocs(cQ)
-      allItemOffers.push(...cSnap.docs.map(d => d.data()))
+      allItemOffers.push(...cSnap.docs.map(d => d.data()).filter(o => o.status !== "deleted"))
     }
     if (allItemOffers.length > 0) {
-      const itemOffersMap: Record<string, { id: string, price: number }[]> = {}
+      const itemOffersMap: Record<string, { id: string, price: number, createdAt: string }[]> = {}
       allItemOffers.forEach(o => {
         if (!itemOffersMap[o.inquiry_item_id]) itemOffersMap[o.inquiry_item_id] = []
-        itemOffersMap[o.inquiry_item_id].push({ id: o.id, price: o.price_per_ton })
+        itemOffersMap[o.inquiry_item_id].push({ id: o.id, price: o.price_per_ton, createdAt: o.created_at })
       })
 
       offers.forEach(offer => {
         const competitors = itemOffersMap[offer.inquiryItemId]
         if (competitors) {
-          competitors.sort((a, b) => a.price - b.price)
+          competitors.sort((a, b) => {
+            if (a.price === b.price) {
+              return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            }
+            return a.price - b.price
+          })
           const rankIndex = competitors.findIndex(c => c.id === offer.id)
           if (rankIndex !== -1) offer.rank = rankIndex + 1
         }
       })
+
+      // Fetch inquiry items to get requested quantities for total price calculation
+      const items: any[] = []
+      for (let i = 0; i < itemIds.length; i += 10) {
+        const chunk = itemIds.slice(i, i + 10);
+        const iqQ = query(collection(db, "inquiry_items"), where("id", "in", chunk))
+        const iqSnap = await getDocs(iqQ)
+        items.push(...iqSnap.docs.map(d => d.data()))
+      }
+
+      if (items.length > 0) {
+        const itemQtyMap = new Map<string, number>()
+        items.forEach(item => {
+          const qtyRaw = item.options?.["Quantity"] || item.options?.["Qty"] || item.options?.["quantity"]
+          const qty = parseFloat(String(qtyRaw).replace(/[^\d.]/g, '')) || 1
+          itemQtyMap.set(item.id, qty)
+        })
+
+        offers.forEach(offer => {
+          offer.requestedQuantity = itemQtyMap.get(offer.inquiryItemId) || 1
+        })
+      }
     }
   }
+
+  offers.forEach(offer => {
+    if (!sellerMap.has(offer.sellerId)) {
+      sellerMap.set(offer.sellerId, sellerCounter++)
+    }
+    offer.anonymizedSeller = offer.sellerAlias || `Seller ${sellerMap.get(offer.sellerId)}`
+  })
 
   const acceptedOffers = offers.filter(o => o.status === "accepted")
   if (acceptedOffers.length > 0) {
@@ -886,13 +1027,62 @@ export async function getAcceptedOffersByUserId(userId: string, role: UserRole):
   return []
 }
 
-export async function getProducts(): Promise<{ id: string, name: string }[]> {
+export async function getProducts(): Promise<{ id: string, name: string, sub_products?: string[] }[]> {
   const q = query(collection(db, "products"), orderBy("name", "asc"))
   const snap = await getDocs(q)
   return snap.docs.map((p) => ({
     id: p.data().product_id?.toString() || p.id,
-    name: p.data().name
+    name: p.data().name,
+    sub_products: p.data().sub_products || []
   }))
+}
+
+export interface ProductOption {
+  id: string
+  product_id: string
+  sub_product?: string
+  option_name: string
+  buyer_option_type: string
+  seller_option_type: string
+  dropdown_values?: string[]
+}
+
+export async function getAllSellerProductOptions(): Promise<Record<string, ProductOption[]>> {
+  const q = query(collection(db, "product_options"))
+  const snap = await getDocs(q)
+  const result: Record<string, ProductOption[]> = {}
+
+  snap.docs.forEach((docSnap) => {
+    const data = docSnap.data() as ProductOption
+    if (data.seller_option_type && data.seller_option_type !== "none") {
+      const pId = String(data.product_id)
+      if (!result[pId]) result[pId] = []
+
+      const existingOpt = result[pId].find(o => o.option_name === data.option_name)
+      if (existingOpt) {
+        if (data.dropdown_values && Array.isArray(data.dropdown_values)) {
+          existingOpt.dropdown_values = Array.from(new Set([...(existingOpt.dropdown_values || []), ...data.dropdown_values]))
+        }
+      } else {
+        result[pId].push({ ...data, id: docSnap.id })
+      }
+    }
+  })
+
+  return result
+}
+
+export async function getAllProductManufacturers(): Promise<Record<string, string[]>> {
+  const q = query(collection(db, "product_options"), where("option_name", "==", "Manufacturer"));
+  const snap = await getDocs(q);
+  const result: Record<string, string[]> = {};
+  snap.docs.forEach((docSnap) => {
+    const data = docSnap.data();
+    if (data.product_id && data.dropdown_values) {
+      result[data.product_id.toString()] = data.dropdown_values;
+    }
+  });
+  return result;
 }
 
 export async function getUserDisplayName(userId: string, currentUserId: string): Promise<string> {
@@ -919,6 +1109,9 @@ export interface UpdateUserData {
   phone?: string
   company?: string
   categories?: string[]
+  productManufacturers?: Record<string, string[]>
+  sellerProductOptions?: Record<string, Record<string, any>>
+  availableLocations?: Record<string, string[]>
   smsNotificationsEnabled?: boolean
 }
 
@@ -930,6 +1123,9 @@ export async function updateUser(userId: string, updates: UpdateUserData): Promi
   if (updates.phone !== undefined) updateData.phone = updates.phone
   if (updates.company !== undefined) updateData.company = updates.company
   if (updates.categories !== undefined) updateData.categories = updates.categories
+  if (updates.productManufacturers !== undefined) updateData.product_manufacturers = updates.productManufacturers
+  if (updates.sellerProductOptions !== undefined) updateData.seller_product_options = updates.sellerProductOptions
+  if (updates.availableLocations !== undefined) updateData.available_locations = updates.availableLocations
   if (updates.smsNotificationsEnabled !== undefined) updateData.sms_notifications_enabled = updates.smsNotificationsEnabled
 
   try {

@@ -44,7 +44,7 @@ export async function PUT(req: Request) {
 
     for (const [key, value] of Object.entries(updates)) {
       if (allowedFields.includes(key) && value !== undefined && value !== null) {
-        updateData[key as keyof UpdateUserData] = value as string
+        (updateData as any)[key] = value
       }
     }
 

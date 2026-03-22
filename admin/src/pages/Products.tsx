@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Package, X } from 'lucide-react';
 import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
 type Product = {
   product_id: number;
   name: string;
+  sub_products?: string[];
   created_at: string;
 };
 
@@ -27,6 +28,7 @@ export function Products() {
         return {
           product_id: parseInt(d.id) || data.product_id,
           name: data.name,
+          sub_products: data.sub_products || [],
           created_at: data.created_at || new Date().toISOString()
         }
       });
@@ -71,6 +73,41 @@ export function Products() {
     }
   };
 
+  const handleAddSubProduct = async (product: Product) => {
+    const subName = window.prompt("Enter Sub-Product Name:");
+    if (!subName || !subName.trim()) return;
+
+    const updatedSubProducts = [...(product.sub_products || []), subName.trim()];
+    try {
+      await setDoc(doc(db, 'products', String(product.product_id)), {
+        ...product,
+        sub_products: updatedSubProducts
+      }, { merge: true });
+
+      setProducts(prev => prev.map(p => p.product_id === product.product_id ? { ...p, sub_products: updatedSubProducts } : p));
+    } catch (error) {
+      console.error('Error adding sub-product:', error);
+      alert("Failed to add sub-product");
+    }
+  };
+
+  const handleDeleteSubProduct = async (product: Product, subName: string) => {
+    if (!window.confirm(`Are you sure you want to delete sub-product "${subName}"?`)) return;
+
+    const updatedSubProducts = (product.sub_products || []).filter(s => s !== subName);
+    try {
+      await setDoc(doc(db, 'products', String(product.product_id)), {
+        ...product,
+        sub_products: updatedSubProducts
+      }, { merge: true });
+
+      setProducts(prev => prev.map(p => p.product_id === product.product_id ? { ...p, sub_products: updatedSubProducts } : p));
+    } catch (error) {
+      console.error('Error deleting sub-product:', error);
+      alert("Failed to delete sub-product");
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
@@ -112,19 +149,54 @@ export function Products() {
           ) : (
             <div className="divide-y divide-border">
               {products.map((product) => (
-                <div key={product.product_id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 hover:bg-accent hover:text-accent-foreground transition-colors group gap-4">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{product.name}</span>
+                <div key={product.product_id} className="flex flex-col p-4 hover:bg-accent/30 transition-colors group gap-4 border-b last:border-0 border-border">
+                  <div className="flex justify-between items-center w-full">
+                    <div className="flex items-center gap-2 text-lg font-semibold text-foreground">
+                      <Package className="h-5 w-5 text-primary" />
+                      {product.name}
+                    </div>
+                    <button
+                      onClick={() => handleDeleteProduct(product.product_id)}
+                      className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-destructive hover:text-destructive-foreground h-9 w-9 text-muted-foreground hover:shadow-sm shrink-0"
+                      title="Delete Product"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Sub-Products Section */}
+                  <div className="pl-7 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                        Sub-Products
+                        <span className="text-[10px] bg-muted px-1.5 py-0.5 rounded ml-1">{(product.sub_products || []).length}</span>
+                      </h4>
+                      <button
+                        onClick={() => handleAddSubProduct(product)}
+                        className="text-xs font-semibold text-primary hover:text-primary/80 flex items-center gap-1"
+                      >
+                        <Plus className="h-3 w-3" /> Add Sub-Product
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {(product.sub_products || []).length > 0 ? (
+                        product.sub_products?.map((sub, sIdx) => (
+                          <div key={sIdx} className="group/sub flex items-center gap-2 bg-background border border-border px-3 py-1.5 rounded-lg text-sm shadow-sm">
+                            <span className="font-medium text-foreground">{sub}</span>
+                            <button
+                              onClick={() => handleDeleteSubProduct(product, sub)}
+                              className="text-muted-foreground hover:text-destructive opacity-0 group-hover/sub:opacity-100 transition-opacity"
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-muted-foreground italic">No sub-products added. This product will use general configuration.</p>
+                      )}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDeleteProduct(product.product_id)}
-                    className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:bg-destructive hover:text-destructive-foreground h-9 w-9 text-muted-foreground group-hover:text-destructive/80 group-hover:hover:text-destructive-foreground shrink-0"
-                    title="Delete Product"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
                 </div>
               ))}
             </div>

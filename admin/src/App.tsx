@@ -8,6 +8,7 @@ import { Settings } from "./pages/Settings"
 import { Categories } from "./pages/Categories"
 import { AddDetails } from "./pages/AddDetails"
 import { ProductDetails } from "./pages/ProductDetails"
+import { ManageLocations } from "./pages/ManageLocations"
 import { Login } from "./pages/Login"
 import { Verification } from "./pages/Verification"
 import { AuthProvider, useAuth } from "./lib/auth-context"
@@ -32,6 +33,7 @@ function App() {
               <Route path="products" element={<Products />} />
               <Route path="view-product" element={<ProductDetails />} />
               <Route path="verification" element={<Verification />} />
+              <Route path="locations" element={<ManageLocations />} />
               <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>

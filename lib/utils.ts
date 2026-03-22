@@ -9,6 +9,7 @@ export function formatOptionType(type: string): string {
   switch (type.toLowerCase()) {
     case 'number': return 'No.'
     case 'dropdown': return 'Type'
+    case 'radio': return 'Option'
     default: return type.charAt(0).toUpperCase() + type.slice(1)
   }
 }
@@ -18,6 +19,7 @@ export function formatOptionLabel(label: string): string {
   return label
     .replace(/\(number\)/gi, '(No.)')
     .replace(/\(dropdown\)/gi, '(Type)')
+    .replace(/\(radio\)/gi, '(Option)')
 }
 
 export function validatePassword(password: string) {

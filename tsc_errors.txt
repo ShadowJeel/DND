@@ -1,0 +1,17 @@
+.next/types/routes.d 2.ts(71,5): error TS2717: Subsequent property declarations must have the same type.  Property 'params' must be of type 'Promise<ParamMap[AppRoute]>', but here has type 'Promise<ParamMap[AppRoute]>'.
+.next/types/routes.d 2.ts(84,8): error TS2300: Duplicate identifier 'LayoutProps'.
+.next/types/routes.d 2.ts(101,13): error TS2428: All declarations of 'RouteContext' must have identical type parameters.
+.next/types/routes.d 2.ts(102,5): error TS2717: Subsequent property declarations must have the same type.  Property 'params' must be of type 'Promise<ParamMap[AppRouteHandlerRoute]>', but here has type 'Promise<ParamMap[AppRouteHandlerRoute]>'.
+.next/types/validator 2.ts(205,57): error TS2344: Type '"/api/debug-whatsapp"' does not satisfy the constraint 'AppRouteHandlerRoutes'.
+.next/types/validator 2.ts(206,39): error TS2307: Cannot find module '../../app/api/debug-whatsapp/route.js' or its corresponding type declarations.
+.next/types/validator 2.ts(268,57): error TS2344: Type '"/api/test-whatsapp"' does not satisfy the constraint 'AppRouteHandlerRoutes'.
+.next/types/validator 2.ts(269,39): error TS2307: Cannot find module '../../app/api/test-whatsapp/route.js' or its corresponding type declarations.
+app/api/user/route.ts(47,9): error TS2322: Type 'string' is not assignable to type 'undefined'.
+lib/check-schema.ts(2,20): error TS2307: Cannot find module './db' or its corresponding type declarations.
+lib/check-tables.ts(2,20): error TS2307: Cannot find module './db' or its corresponding type declarations.
+lib/clear-db.ts(2,20): error TS2307: Cannot find module './db' or its corresponding type declarations.
+lib/db-stats.ts(2,20): error TS2307: Cannot find module './db' or its corresponding type declarations.
+lib/drop-users-table.ts(2,20): error TS2307: Cannot find module './db' or its corresponding type declarations.
+lib/inspect-users.ts(2,20): error TS2307: Cannot find module './db' or its corresponding type declarations.
+lib/user-utils.ts(13,3): error TS2322: Type 'Promise<string>' is not assignable to type 'string'.
+run_migration.ts(1,30): error TS2307: Cannot find module '@supabase/supabase-js' or its corresponding type declarations.

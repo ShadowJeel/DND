@@ -162,6 +162,7 @@ export default function SellerMyOffersPage() {
                     <TableHead className="text-muted-foreground">Inquiry</TableHead>
                     <TableHead className="text-muted-foreground">Item</TableHead>
                     <TableHead className="text-muted-foreground">Price/Ton</TableHead>
+                    <TableHead className="text-muted-foreground">Total Est.</TableHead>
                     <TableHead className="text-muted-foreground">Rank</TableHead>
                     <TableHead className="text-muted-foreground">Status</TableHead>
                     <TableHead className="text-muted-foreground">Buyer Contact</TableHead>
@@ -177,6 +178,9 @@ export default function SellerMyOffersPage() {
                       <TableCell className="text-muted-foreground">{offer.inquiryItemId}</TableCell>
                       <TableCell className="font-semibold text-foreground">
                         {"₹"}{offer.pricePerTon.toLocaleString("en-IN")}
+                      </TableCell>
+                      <TableCell className="font-bold text-primary">
+                        {"₹"}{((offer.pricePerTon || 0) * (offer.requestedQuantity || 1)).toLocaleString("en-IN")}
                       </TableCell>
                       <TableCell>{rankBadge(offer.rank)}</TableCell>
                       <TableCell>{statusBadge(offer.status)}</TableCell>
@@ -259,10 +263,12 @@ export default function SellerMyOffersPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 border-t border-b border-border py-3">
+                    <div className="grid grid-cols-2 gap-4 border-t border-b border-border py-4">
                       <div>
                         <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Price/Ton</div>
-                        <div className="text-base font-bold text-foreground">₹{offer.pricePerTon.toLocaleString("en-IN")}</div>
+                        <div className="text-sm font-bold text-foreground">₹{offer.pricePerTon.toLocaleString("en-IN")}</div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mt-2">Total Est.</div>
+                        <div className="text-base font-bold text-primary">₹{((offer.pricePerTon || 0) * (offer.requestedQuantity || 1)).toLocaleString("en-IN")}</div>
                       </div>
                       <div>
                         <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Date</div>

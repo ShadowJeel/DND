@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { Link, Outlet, useLocation } from "react-router-dom"
-import { BarChart3, Box, LayoutDashboard, Menu, Settings, X, Eye, LogOut, UserCheck } from "lucide-react"
+import { BarChart3, Box, LayoutDashboard, Menu, Settings, X, Eye, LogOut, UserCheck, MapPin } from "lucide-react"
 import { cn } from "../lib/utils"
 import { ThemeToggle } from "./theme-toggle"
 import { useAuth } from "../lib/auth-context"
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
     { href: "/add-details", label: "Add Details", icon: Menu },
     { href: "/view-product", label: "View Product Detail", icon: Eye },
     { href: "/verification", label: "User Verification", icon: UserCheck },
+    { href: "/locations", label: "Manage Locations", icon: MapPin },
     { href: "/settings", label: "Profile & Settings", icon: Settings },
 ]
 
