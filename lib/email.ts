@@ -209,7 +209,6 @@ export async function sendInquirySubmissionReceiptEmail(to: string, inquiry: any
                     <strong>${item.product}</strong>
                     ${item.sub_product ? `<br/><span style="color: #666; font-size: 12px;">Sub-product: ${item.sub_product}</span>` : ""}
                 </td>
-                <td style="padding: 12px; color: #333; font-size: 14px;">${item.paymentTerms || "N/A"}</td>
                 <td style="padding: 12px; color: #555; font-size: 13px;">
                     ${optionsHtml ? `<ul style="margin: 0; padding-left: 16px;">${optionsHtml}</ul>` : "None"}
                 </td>
