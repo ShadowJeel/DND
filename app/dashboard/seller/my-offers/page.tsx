@@ -8,7 +8,8 @@ import { AlertCircle, Edit, Mail, Phone, Tag, Trash2, Trophy, Plus, FileText, Cl
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import useSWR from "swr"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
@@ -44,8 +45,21 @@ function statusBadge(status: string, inquiryStatus?: string) {
   }
 }
 
-export default function SellerMyOffersPage() {
+function SellerMyOffersContent() {
   const { user } = useAuth()
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab")
+
+  const [activeTab, setActiveTab] = useState(() => {
+    if (tabParam === "history") return tabParam
+    return "current"
+  })
+
+  useEffect(() => {
+    if (tabParam === "current" || tabParam === "history") {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam])
   const { data: offers, isLoading, mutate } = useSWR(
     user ? `seller-offers-${user.id}` : null,
     () => getOffersBySellerId(user!.id),
@@ -212,10 +226,8 @@ export default function SellerMyOffersPage() {
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-2">
                       {isCurrent && offer.status !== "accepted" && offer.inquiryStatus !== "deleted" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-primary hover:bg-primary/10"
+                        <button
+                          className="btn-action-icon"
                           onClick={() => {
                             setEditingOffer(offer)
                             setSelectedFiles([])
@@ -226,8 +238,8 @@ export default function SellerMyOffersPage() {
                           }}
                           title="Edit Offer"
                         >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                          <Edit />
+                        </button>
                       )}
 
                       {isCurrent && (["accepted", "rejected", "disqualified"].includes(offer.status) || offer.inquiryStatus === "deleted" || offer.inquiryStatus === "closed") && (
@@ -243,15 +255,13 @@ export default function SellerMyOffersPage() {
                       )}
 
                       {isCurrent && offer.status !== "accepted" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-destructive hover:bg-destructive/10"
+                        <button
+                          className="btn-action-icon"
                           onClick={() => handleDeleteOffer(offer.id)}
                           title="Delete Offer"
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                          <Trash2 />
+                        </button>
                       )}
                     </div>
                   </TableCell>
@@ -271,7 +281,7 @@ export default function SellerMyOffersPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="text-xs font-medium text-muted-foreground">Offer ID: {offer.id}</div>
-                    <div className="text-sm font-semibold text-foreground">Inquiry: {offer.inquiryId}</div>
+                    <div className="text-sm font-semibold text-red-500">Inquiry: {offer.inquiryId}</div>
                     <div className="text-xs text-muted-foreground">Item: {offer.inquiryItemId}</div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
@@ -299,8 +309,8 @@ export default function SellerMyOffersPage() {
                     <div className="flex flex-col gap-1.5 ">
                       {offer.buyerAlias && <div className="text-sm font-bold text-foreground">{offer.buyerAlias}</div>}
                       {offer.buyerEmail && (
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <Mail className="h-3 w-3" /> {offer.buyerEmail}
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground break-all">
+                          <Mail className="h-3 w-3 shrink-0" /> {offer.buyerEmail}
                         </div>
                       )}
                       {offer.buyerPhone && (
@@ -320,12 +330,10 @@ export default function SellerMyOffersPage() {
                   )}
                 </div>
 
-                <div className="flex flex-col gap-2 pt-2">
+                <div className="flex items-center gap-2 pt-2">
                   {isCurrent && offer.status !== "accepted" && offer.inquiryStatus !== "deleted" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full gap-2 h-10"
+                    <button
+                      className="btn-action-icon"
                       onClick={() => {
                         setEditingOffer(offer)
                         setSelectedFiles([])
@@ -334,29 +342,29 @@ export default function SellerMyOffersPage() {
                         setContactPhone(offer.contactPhone || user?.phone || "")
                         setQuoteComments(offer.comments || "")
                       }}
+                      title="Edit Offer"
                     >
-                      <Edit className="h-4 w-4" /> Edit Offer
-                    </Button>
+                      <Edit />
+                    </button>
                   )}
                   {isCurrent && (["accepted", "rejected", "disqualified"].includes(offer.status) || offer.inquiryStatus === "deleted") && (
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full gap-2 h-10"
+                      className="flex-grow gap-2 h-10"
                       onClick={() => handleArchiveOffer(offer.id)}
                     >
                       <Archive className="h-4 w-4" /> Move to History
                     </Button>
                   )}
                   {isCurrent && offer.status !== "accepted" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full gap-2 h-10 text-destructive border-destructive/20 hover:bg-destructive/10 hover:text-destructive"
+                    <button
+                      className="btn-action-icon"
                       onClick={() => handleDeleteOffer(offer.id)}
+                      title="Delete Offer"
                     >
-                      <Trash2 className="h-4 w-4" /> Delete Offer
-                    </Button>
+                      <Trash2 />
+                    </button>
                   )}
                 </div>
               </div>
@@ -413,7 +421,7 @@ export default function SellerMyOffersPage() {
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="current" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid w-full max-w-[400px] grid-cols-2">
             <TabsTrigger value="current">Active Bidding ({activeOffers.length})</TabsTrigger>
             <TabsTrigger value="history">Closed Bidding ({historyOffers.length})</TabsTrigger>
@@ -455,7 +463,7 @@ export default function SellerMyOffersPage() {
             <div>
               <p className="text-sm font-medium text-foreground">Competitive Intelligence</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Your rank indicates your price position relative to other sellers. A rank of #1 means you have the lowest (most competitive) price. Ranks update in real-time as new offers are submitted.
+                Your rank indicates your price position in comparison with other sellers. A rank of #1 means you have the lowest (most competitive) price. Ranks update in real-time as new offers are submitted.
               </p>
             </div>
           </CardContent>
@@ -466,7 +474,7 @@ export default function SellerMyOffersPage() {
       <Dialog open={!!editingOffer} onOpenChange={(open) => {
         if (!open) { setEditingOffer(null); setSelectedFiles([]); }
       }}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="w-[calc(100vw-1.5rem)] md:w-full max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Offer</DialogTitle>
             <DialogDescription>
@@ -504,18 +512,17 @@ export default function SellerMyOffersPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <a href={url} target="_blank" rel="noreferrer" className="text-[10px] text-primary hover:underline font-medium">View</a>
-                        <Button
+                        <button
                           type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
+                          className="btn-action-icon !w-6 !h-6"
                           onClick={() => {
                             const newAttachments = editingOffer.attachments.filter((_: any, i: number) => i !== idx);
                             setEditingOffer({ ...editingOffer, attachments: newAttachments });
                           }}
+                          title="Delete Attachment"
                         >
                           <Trash2 className="h-3 w-3" />
-                        </Button>
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -527,15 +534,14 @@ export default function SellerMyOffersPage() {
                         <FileText className="h-4 w-4 shrink-0 text-primary" />
                         <span className="text-xs truncate">{file.name}</span>
                       </div>
-                      <Button
+                      <button
                         type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
+                        className="btn-action-icon !w-6 !h-6"
                         onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== idx))}
+                        title="Remove Document"
                       >
                         <Trash2 className="h-3 w-3" />
-                      </Button>
+                      </button>
                     </div>
                   ))}
 
@@ -618,5 +624,13 @@ export default function SellerMyOffersPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+export default function SellerMyOffersPage() {
+  return (
+    <Suspense fallback={<div className="py-20 text-center text-muted-foreground">Loading offers...</div>}>
+      <SellerMyOffersContent />
+    </Suspense>
   )
 }

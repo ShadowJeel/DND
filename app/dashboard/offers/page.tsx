@@ -94,7 +94,7 @@ function OffersContent() {
     await fetch("/api/offers", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "disqualify", offerId }),
+      body: JSON.stringify({ action: "disqualify", offerId, buyerId: user?.id }),
     })
 
     mutate()
@@ -113,7 +113,7 @@ function OffersContent() {
     await fetch("/api/offers", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "accept", offerId }),
+      body: JSON.stringify({ action: "accept", offerId, buyerId: user?.id }),
     })
 
     mutate()
@@ -350,7 +350,7 @@ function OffersContent() {
                                           return (
                                             <div key={k} className="w-full">
                                               <strong className="font-medium text-foreground block mb-1">{formatOptionLabel(k)}</strong>
-                                              <div className="rounded border border-border overflow-hidden">
+                                              <div className="rounded border border-border overflow-x-auto">
                                                 <table className="w-full text-[10px]">
                                                   <thead>
                                                     <tr className="bg-muted/30 border-b border-border">
@@ -432,9 +432,9 @@ function OffersContent() {
                                       <Button size="sm" variant="outline" className="h-8 px-2 gap-1 text-xs bg-transparent" onClick={() => handleAcceptOffer(offer.id)}>
                                         <CheckCircle className="h-3.5 w-3.5" /> Accept
                                       </Button>
-                                      <Button size="sm" variant="outline" className="h-8 px-2 gap-1 text-xs text-destructive hover:text-destructive bg-transparent" onClick={() => handleDisqualifyOffer(offer.id)}>
-                                        <Trash2 className="h-3.5 w-3.5" /> Disqualify
-                                      </Button>
+                                      <button className="btn-action-icon" onClick={() => handleDisqualifyOffer(offer.id)} title="Disqualify Offer">
+                                        <Trash2 />
+                                      </button>
                                     </div>
                                   )}
                                   {offer.status === "pending" && displayStatus === "active" && (
@@ -515,7 +515,7 @@ function OffersContent() {
                                       return (
                                         <div key={k} className="w-full">
                                           <strong className="font-medium text-foreground block mb-1">{formatOptionLabel(k)}</strong>
-                                          <div className="rounded border border-border overflow-hidden">
+                                          <div className="rounded border border-border overflow-x-auto">
                                             <table className="w-full text-[10px]">
                                               <thead>
                                                 <tr className="bg-muted/30 border-b border-border">
@@ -557,13 +557,13 @@ function OffersContent() {
                             {offer.status === "accepted" ? (
                               <div className="flex flex-col gap-1.5 text-sm bg-primary/5 border border-primary/10 p-3 rounded-md mt-1">
                                 {offer.contactEmail && (
-                                  <div className="flex items-center gap-2 text-foreground">
-                                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                                      <Mail className="h-3.5 w-3.5 text-primary" />
-                                    </div>
-                                    <span className="text-sm font-medium">{offer.contactEmail}</span>
-                                  </div>
-                                )}
+                                   <div className="flex items-center gap-2 text-foreground">
+                                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                                       <Mail className="h-3.5 w-3.5 text-primary" />
+                                     </div>
+                                     <span className="text-sm font-medium break-all">{offer.contactEmail}</span>
+                                   </div>
+                                 )}
                                 {offer.contactPhone && (
                                   <div className="flex items-center gap-2 text-foreground">
                                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
@@ -582,13 +582,13 @@ function OffersContent() {
 
                             {/* Actions */}
                             {offer.status === "pending" && (
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-3 border-t border-border/60 mt-2">
+                              <div className="flex items-center gap-2 pt-3 border-t border-border/60 mt-2">
                                 {displayStatus === "bidding" ? (
                                   <>
-                                    <Button size="sm" variant="outline" className="h-9 gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20 bg-transparent w-full" onClick={() => handleDisqualifyOffer(offer.id)}>
-                                      <Trash2 className="h-4 w-4" /> Disqualify
-                                    </Button>
-                                    <Button size="sm" className="h-9 gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90 w-full shadow-sm" onClick={() => handleAcceptOffer(offer.id)}>
+                                    <button className="btn-action-icon" onClick={() => handleDisqualifyOffer(offer.id)} title="Disqualify Offer">
+                                      <Trash2 />
+                                    </button>
+                                    <Button size="sm" className="h-9 flex-1 gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm" onClick={() => handleAcceptOffer(offer.id)}>
                                       <CheckCircle className="h-4 w-4" /> Accept Offer
                                     </Button>
                                   </>

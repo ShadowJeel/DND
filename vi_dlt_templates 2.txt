@@ -1,0 +1,43 @@
+VI DLT Platform - SMS Templates
+
+When registering templates on the VI DLT Platform (or Airtel/Jio/PingConnect), ensure you select the correct category (e.g., Service Implicit) and use {#var#} for dynamic variables.
+
+1. Template Name: DND_Welcome
+Message Type: Service Implicit
+Template Content:
+Dear {#var#}, Welcome to DND Purchase! Your account has been successfully created. Explore the platform and start transacting today. - DNDPUR
+
+2. Template Name: DND_New_Inquiry
+Message Type: Service Implicit
+Template Content:
+Hello, a new inquiry matching your categories has been posted on DND Purchase. Please check your dashboard to view details. - DNDPUR
+
+3. Template Name: DND_Bidding_Started
+Message Type: Service Implicit
+Template Content:
+Hello, bidding has started for inquiry ID: {#var#} on DND Purchase. Submit your best offer before the deadline. - DNDPUR
+
+4. Template Name: DND_New_Offer
+Message Type: Service Implicit
+Template Content:
+Dear Buyer, you have received a new offer for your inquiry ID: {#var#}. Log in to review the offer. - DNDPUR
+
+5. Template Name: DND_Offer_Accepted
+Message Type: Service Implicit
+Template Content:
+Hello, the offer for ID: {#var#} has been accepted! Please check the platform for further details. - DNDPUR
+
+6. Template Name: DND_Offer_Rejected
+Message Type: Service Implicit
+Template Content:
+Hello, your offer for ID: {#var#} was not accepted. Keep trying on other open inquiries! - DNDPUR
+
+7. Template Name: DND_Inquiry_Closed
+Message Type: Service Implicit
+Template Content:
+Notice: Inquiry ID {#var#} has been closed. Thank you for using DND Purchase. - DNDPUR
+
+Important Notes for DLT:
+- Variables must be specified exactly as {#var#} on the DLT platform.
+- Each template must be linked to your approved Header/Sender ID (e.g., DNDPUR).
+- Keep the DLT Template ID handy once approved, as it is required in the MSG91 configuration.

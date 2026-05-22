@@ -27,9 +27,23 @@ export default function MyProductsPage() {
     const [tempProductOptions, setTempProductOptions] = useState<Record<string, any>>({})
     const [tempLocationDistricts, setTempLocationDistricts] = useState<string[]>([])
 
-    const [formData, setFormData] = useState({
+    type SellerFormData = {
+        categories: string[]
+        sellerProductOptions: Record<string, any[]>
+        availableLocations: Record<string, string[]>
+    }
+
+    const normalizeSellerProductOptions = (options: Record<string, any> | undefined): Record<string, any[]> => {
+        if (!options) return {}
+        return Object.entries(options).reduce((acc, [key, value]) => {
+            acc[key] = Array.isArray(value) ? value : [value]
+            return acc
+        }, {} as Record<string, any[]>)
+    }
+
+    const [formData, setFormData] = useState<SellerFormData>({
         categories: user?.categories || [] as string[],
-        sellerProductOptions: user?.sellerProductOptions || {} as Record<string, any[]>,
+        sellerProductOptions: normalizeSellerProductOptions(user?.sellerProductOptions),
         availableLocations: user?.availableLocations || {} as Record<string, string[]>,
     })
     const [locations, setLocations] = useState<any[]>([])
@@ -62,7 +76,7 @@ export default function MyProductsPage() {
         if (user) {
             setFormData({
                 categories: user.categories || [],
-                sellerProductOptions: user.sellerProductOptions || {},
+                sellerProductOptions: normalizeSellerProductOptions(user.sellerProductOptions),
                 availableLocations: user.availableLocations || {},
             })
         }
@@ -230,14 +244,14 @@ export default function MyProductsPage() {
                 ? formData.categories
                 : [...formData.categories, catName]
 
-            const newOptions = {
+            const newOptions: Record<string, any[]> = {
                 ...formData.sellerProductOptions,
-                [catName]: finalItems
-            }
+                [catName]: finalItems,
+            } as Record<string, any[]>
 
             const data = await updateUser(user.id, {
                 categories: newCategories,
-                sellerProductOptions: newOptions,
+                sellerProductOptions: newOptions as Record<string, any[]>,
             })
 
             if (!data) throw new Error("Failed to update product")
@@ -362,11 +376,11 @@ export default function MyProductsPage() {
                 </p>
                 {/* Summary Stats */}
                 <div className="mt-5 flex flex-wrap gap-3">
-                    <div className="flex items-center gap-2 rounded-full bg-primary/10 border border-primary/20 px-4 py-1.5 text-sm font-medium text-primary">
+                    <div className="flex items-center gap-2 rounded-full bg-primary border border-primary px-4 py-1.5 text-sm font-medium text-primary-foreground">
                         <Package className="h-3.5 w-3.5" />
                         {activeProductCount} Product{activeProductCount !== 1 ? "s" : ""} Active
                     </div>
-                    <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-4 py-1.5 text-sm font-medium text-emerald-500">
+                    <div className="flex items-center gap-2 rounded-full bg-emerald-600 border border-emerald-600 px-4 py-1.5 text-sm font-medium text-white">
                         <MapPin className="h-3.5 w-3.5" />
                         {activeLocationCount} Location{activeLocationCount !== 1 ? "s" : ""} Covered
                     </div>
@@ -427,7 +441,7 @@ export default function MyProductsPage() {
                                                 </div>
                                             )}
                                             <div className="min-w-0">
-                                                <div className={`font-semibold text-lg truncate ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                                <div className={`font-bold text-xl tracking-tight truncate ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
                                                     {catName}
                                                 </div>
                                             </div>
@@ -437,18 +451,17 @@ export default function MyProductsPage() {
                                             <div onClick={(e) => e.stopPropagation()}>
                                                 {(isEditing || (isExpanded && !isActive)) ? (
                                                     <div className="flex gap-2">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground"
+                                                        <button
+                                                            className="btn-action-icon"
                                                             onClick={() => {
                                                                 setEditingProduct(null)
                                                                 if (!isActive) setExpandedProducts(prev => prev.filter(c => c !== catName))
                                                             }}
                                                             disabled={loading}
+                                                            title="Cancel"
                                                         >
-                                                            Cancel
-                                                        </Button>
+                                                            <X />
+                                                        </button>
                                                         {(() => {
                                                             const isValid = tempProductItems.length > 0 || Object.keys(tempProductOptions).length > 0;
                                                             return (
@@ -466,10 +479,8 @@ export default function MyProductsPage() {
                                                 ) : (
                                                     isActive && (
                                                         <div className="flex gap-1.5">
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                                                            <button
+                                                                className="btn-action-icon"
                                                                 onClick={() => {
                                                                     setEditingProduct(catName)
                                                                     setTempProductItems(getSafeItemsArray(formData.sellerProductOptions[catName]))
@@ -478,18 +489,16 @@ export default function MyProductsPage() {
                                                                 disabled={loading}
                                                                 title="Edit product"
                                                             >
-                                                                <Pencil className="h-3.5 w-3.5" />
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                                <Pencil />
+                                                            </button>
+                                                            <button
+                                                                className="btn-action-icon"
                                                                 onClick={() => deleteProduct(catName)}
                                                                 disabled={loading}
                                                                 title="Remove product"
                                                             >
-                                                                <X className="h-3.5 w-3.5" />
-                                                            </Button>
+                                                                <X />
+                                                            </button>
                                                         </div>
                                                     )
                                                 )}
@@ -672,7 +681,7 @@ export default function MyProductsPage() {
                                                 </div>
                                             )}
                                             <div className="min-w-0">
-                                                <div className={`font-semibold text-[15px] truncate ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                                <div className={`font-bold text-xl tracking-tight truncate ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
                                                     {stateName}
                                                 </div>
                                                 {isActive && districtCount > 0 && !isEditing && (
@@ -710,11 +719,10 @@ export default function MyProductsPage() {
                                                     </div>
                                                 ) : (
                                                     isActive && (
-                                                        <>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                className="h-8 w-8 p-0 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10"
+                                                        <div className="flex gap-2">
+                                                            <button
+                                                                type="button"
+                                                                className="btn-action-icon btn-action-icon-green"
                                                                 onClick={() => {
                                                                     setEditingLocation(stateName)
                                                                     setTempLocationDistricts(formData.availableLocations[stateName] || [])
@@ -722,19 +730,18 @@ export default function MyProductsPage() {
                                                                 disabled={loading}
                                                                 title="Edit location"
                                                             >
-                                                                <Pencil className="h-3.5 w-3.5" />
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="ghost"
-                                                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                                <Pencil />
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className="btn-action-icon btn-action-icon-green"
                                                                 onClick={() => deleteLocation(stateName)}
                                                                 disabled={loading}
                                                                 title="Remove location"
                                                             >
-                                                                <X className="h-3.5 w-3.5" />
-                                                            </Button>
-                                                        </>
+                                                                <X />
+                                                            </button>
+                                                        </div>
                                                     )
                                                 )}
                                             </div>

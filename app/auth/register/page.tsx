@@ -170,19 +170,19 @@ export default function RegisterPage() {
 
   return (
     <div
-      className="flex min-h-screen items-center justify-center bg-background px-4 py-12"
+      className="flex min-h-screen items-center justify-center  px-4 py-12"
       suppressHydrationWarning
     >
       <div className="w-full max-w-lg">
         <Link href="/" className="mb-8 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="h-4 w-4" suppressHydrationWarning /> Back to home
         </Link>
-        <Card className="border-border">
+        <Card className="card-glossy">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-              <Factory className="h-6 w-6 text-primary-foreground" />
+            <div className="mx-auto mb-4 flex items-center justify-center">
+              <img src="/logo-asset-4.png" alt="DND Purchase" className="h-14 md:h-16 w-auto object-contain" />
             </div>
-            <CardTitle className="font-serif text-2xl text-foreground">Create your account</CardTitle>
+            <CardTitle className="text-2xl text-foreground font-bold tracking-tight text-metallic">Create your account</CardTitle>
             <CardDescription className="text-muted-foreground">
               {step === 1
                 ? "Select your role on the platform"

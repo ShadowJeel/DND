@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,8 +26,21 @@ function statusColor(status: string) {
   }
 }
 
-export default function InquiriesPage() {
+function InquiriesContent() {
   const { user } = useAuth()
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab")
+
+  const [activeTab, setActiveTab] = useState(() => {
+    if (tabParam === "bidding" || tabParam === "closed") return tabParam
+    return "current"
+  })
+
+  useEffect(() => {
+    if (tabParam === "current" || tabParam === "bidding" || tabParam === "closed") {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam])
   const { data: inquiries, isLoading, mutate } = useSWR(
     user ? `buyer-inquiries-${user.id}` : null,
     () => getInquiriesByBuyerId(user!.id),
@@ -148,7 +162,7 @@ export default function InquiriesPage() {
             <div key={idx} className="flex flex-col gap-2 rounded-lg bg-muted/40 p-3 text-sm border border-border/50">
               <div className="flex items-center gap-2 font-semibold text-foreground">
                 <Package className="h-4 w-4 text-primary" />
-                {item.product} {item.sub_product && <span className="text-muted-foreground font-normal">({item.sub_product})</span>}
+                <span className="text-red-500 text-lg">{item.product}</span> {item.sub_product && <span className="text-muted-foreground font-normal">({item.sub_product})</span>}
               </div>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-muted-foreground">
                 {sortInquiryOptions(item.options || {}, allProductOptions[`${item.product}|${item.sub_product || ""}`]).map(([k, v]) => {
@@ -245,7 +259,7 @@ export default function InquiriesPage() {
           </CardContent>
         </Card>
       ) : (
-        <Tabs defaultValue="current" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <div className="overflow-x-auto pb-2 -mb-2 mb-6 hide-scrollbar">
             <TabsList className="flex w-max min-w-full sm:grid sm:max-w-[600px] sm:grid-cols-3">
               <TabsTrigger value="current" className="px-4 whitespace-nowrap">Current Inquiry ({currentInquiries.length})</TabsTrigger>
@@ -308,5 +322,13 @@ export default function InquiriesPage() {
         </DialogContent>
       </Dialog>
     </div>
+  )
+}
+
+export default function InquiriesPage() {
+  return (
+    <Suspense fallback={<div className="py-20 text-center text-muted-foreground">Loading inquiries...</div>}>
+      <InquiriesContent />
+    </Suspense>
   )
 }

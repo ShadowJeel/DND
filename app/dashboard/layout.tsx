@@ -19,7 +19,7 @@ function DashboardGuard({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-screen items-center justify-center ">
         <p className="text-muted-foreground">Redirecting to login...</p>
       </div>
     )

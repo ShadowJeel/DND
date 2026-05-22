@@ -108,7 +108,7 @@ function ResetPasswordForm() {
                     <CheckCircle2 className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold font-serif text-foreground">Password Reset Complete</h3>
+                    <h3 className="text-xl font-bold tracking-tight text-metallic">Password Reset Complete</h3>
                     <p className="text-muted-foreground mt-2">
                         Your password has been updated successfully. You can now sign in with your new password.
                     </p>
@@ -165,7 +165,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
     return (
-        <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+        <div className="flex min-h-screen items-center justify-center  px-4 py-12">
             <div className="w-full max-w-md">
                 <Link
                     href="/auth/login"
@@ -175,12 +175,12 @@ export default function ResetPasswordPage() {
                     Back to sign in
                 </Link>
 
-                <Card className="border-border shadow-md">
+                <Card className="card-glossy">
                     <CardHeader className="text-center pb-2">
-                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-                            <Key className="h-6 w-6 text-primary-foreground" />
+                        <div className="mx-auto mb-4 flex items-center justify-center">
+                            <img src="/logo-asset-4.png" alt="DND Purchase" className="h-14 md:h-16 w-auto object-contain" />
                         </div>
-                        <CardTitle className="font-serif text-2xl text-foreground">Set New Password</CardTitle>
+                        <CardTitle className="text-2xl text-foreground font-bold tracking-tight text-metallic">Set New Password</CardTitle>
                         <CardDescription className="text-muted-foreground">
                             Enter a new password for your account.
                         </CardDescription>

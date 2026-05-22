@@ -1,9 +1,11 @@
 import { logger } from "@/lib/logger"
-import { createInquiry, getAllSellerPhones, getInquiriesByBuyerId, getOpenInquiries, getSellersContactInfoByCategories } from "@/lib/store"
-import { notifySellerOfNewInquiryEmail, notifySellersOfBiddingEmail } from "@/lib/email"
+import { createInquiry, getAllSellerPhones, getInquiriesByBuyerId, getOpenInquiries, getSellersContactInfoByCategories, getInquiryById } from "@/lib/store"
+import { notifySellerOfNewInquiryEmail, notifySellersOfBiddingEmail, sendInquirySubmissionReceiptEmail } from "@/lib/email"
 import { notifySellerOfNewInquirySMS, notifySellersOfBiddingSMS } from "@/lib/sms"
 import { getUserById } from "@/lib/store"
 import { NextResponse } from "next/server"
+import { auth } from "@/lib/firebase"
+import { signInWithEmailAndPassword } from "firebase/auth"
 
 export async function GET(req: Request) {
   try {
@@ -38,6 +40,53 @@ export async function POST(req: Request) {
     }
 
     // No longer creating inquiry here directly. Client provides inquiryId.
+
+    // 1. Fetch Buyer details and send receipt email to buyer's selected emails
+    try {
+      const buyer = await getUserById(buyerId)
+      if (buyer) {
+        if (buyer.password) {
+          try {
+            await signInWithEmailAndPassword(auth, buyer.email, buyer.password)
+            logger.info("Server signed in successfully as buyer", { email: buyer.email })
+          } catch (authErr: any) {
+            logger.error("Failed server sign in as buyer", { email: buyer.email, error: authErr?.message })
+          }
+        } else {
+          logger.warn("No password found on buyer profile, skipping server sign in", { buyerId })
+        }
+
+        const inquiry = await getInquiryById(inquiryId)
+        if (inquiry) {
+          // ensure buyerName is populated
+          inquiry.buyerName = buyer.name || inquiry.buyerName || buyerName || "Buyer"
+          
+          const targetEmails = buyer.notificationEmails && buyer.notificationEmails.length > 0
+            ? buyer.notificationEmails
+            : [buyer.email]
+          
+          logger.info("Sending inquiry receipt emails to buyer", {
+            buyerId,
+            inquiryId,
+            targetEmails
+          })
+          
+          const emailPromises = targetEmails.map((email: string) => 
+            sendInquirySubmissionReceiptEmail(email, inquiry).catch((err) => {
+              logger.error("Failed to send inquiry receipt email", { email, error: err?.message })
+              return null
+            })
+          )
+          await Promise.allSettled(emailPromises)
+        } else {
+          logger.warn("Inquiry not found for sending receipt email", { inquiryId })
+        }
+      } else {
+        logger.warn("Buyer not found for sending receipt email", { buyerId })
+      }
+    } catch (emailError: any) {
+      logger.error("Error in buyer notification receipt flow", { error: emailError?.message })
+    }
 
     // Send notifications to targeted sellers about new inquiry
     try {

@@ -3,6 +3,8 @@ import { acceptOffer, closeInquiry, createOffer, disqualifyOffer, getInquiryById
 import { notifyBuyerOfAcceptanceEmail, notifyBuyerOfNewOfferEmail, notifySellerOfAcceptanceEmail, notifySellerOfRejectionEmail } from "@/lib/email"
 import { notifyBuyerOfAcceptanceSMS, notifyBuyerOfNewOfferSMS, notifySellerOfAcceptanceSMS, notifySellerOfRejectionSMS } from "@/lib/sms"
 import { NextResponse } from "next/server"
+import { auth } from "@/lib/firebase"
+import { signInWithEmailAndPassword } from "firebase/auth"
 
 export async function GET(req: Request) {
   try {
@@ -42,6 +44,23 @@ export async function POST(req: Request) {
     // Send notification to buyer about new offer
     try {
       logger.info("New offer submitted", { inquiryId })
+
+      // Authenticate server instance using seller's credentials
+      const seller = await getUserById(sellerId)
+      if (seller) {
+        if (seller.password) {
+          try {
+            await signInWithEmailAndPassword(auth, seller.email, seller.password)
+            logger.info("Server signed in successfully as seller", { email: seller.email })
+          } catch (authErr: any) {
+            logger.error("Failed server sign in as seller", { email: seller.email, error: authErr?.message })
+          }
+        } else {
+          logger.warn("No password found on seller profile, skipping server sign in", { sellerId })
+        }
+      } else {
+        logger.warn("Seller not found for authentication context", { sellerId })
+      }
 
       const inquiry = await getInquiryById(inquiryId)
 
@@ -100,6 +119,20 @@ export async function PATCH(req: Request) {
 
       // Notify seller of rejection
       try {
+        if (body.buyerId) {
+          const buyer = await getUserById(body.buyerId)
+          if (buyer && buyer.password) {
+            try {
+              await signInWithEmailAndPassword(auth, buyer.email, buyer.password)
+              logger.info("Server signed in successfully as buyer for disqualification", { email: buyer.email })
+            } catch (authErr: any) {
+              logger.error("Failed server sign in as buyer for disqualification", { email: buyer.email, error: authErr?.message })
+            }
+          }
+        } else {
+          logger.warn("No buyerId provided in disqualify payload, skipping server auth")
+        }
+
         const offer = await getOfferById(body.offerId)
         if (offer) {
           const seller = await getUserById(offer.sellerId)
@@ -122,6 +155,20 @@ export async function PATCH(req: Request) {
 
       // Send notifications to seller and buyer
       try {
+        if (body.buyerId) {
+          const buyer = await getUserById(body.buyerId)
+          if (buyer && buyer.password) {
+            try {
+              await signInWithEmailAndPassword(auth, buyer.email, buyer.password)
+              logger.info("Server signed in successfully as buyer for acceptance", { email: buyer.email })
+            } catch (authErr: any) {
+              logger.error("Failed server sign in as buyer for acceptance", { email: buyer.email, error: authErr?.message })
+            }
+          }
+        } else {
+          logger.warn("No buyerId provided in accept payload, skipping server auth")
+        }
+
         const offer = await getOfferById(body.offerId)
         if (!offer) {
           logger.error("Offer not found for acceptance", { offerId: body.offerId })
@@ -149,11 +196,36 @@ export async function PATCH(req: Request) {
         if (seller && inquiry && buyer) {
           const productName = inquiry.items[0]?.product || "Product";
 
-          // Send notification to seller
-          logger.info("Notifying seller", { sellerId: seller.id })
-          if (seller.email) {
-            await notifySellerOfAcceptanceEmail(seller.email, offer.id, offer.inquiryId, productName).catch(e => logger.error("Email seller acceptance failed", { error: (e as Error).message }))
+          const sellerInfo = {
+            name: seller.name || "Seller",
+            company: seller.company || undefined,
+            email: offer.contactEmail || seller.email || "",
+            phone: offer.contactPhone || seller.phone || ""
           }
+
+          const buyerInfo = {
+            name: buyer.name || "Buyer",
+            company: buyer.company || undefined,
+            email: buyer.email || "",
+            phone: buyer.phone || ""
+          }
+
+          const sellerTargetEmails = seller.notificationEmails && seller.notificationEmails.length > 0
+            ? seller.notificationEmails
+            : ([seller.email].filter(Boolean) as string[])
+
+          const buyerTargetEmails = buyer.notificationEmails && buyer.notificationEmails.length > 0
+            ? buyer.notificationEmails
+            : ([buyer.email].filter(Boolean) as string[])
+
+          // Send notification to seller
+          logger.info("Notifying seller emails", { sellerId: seller.id, sellerTargetEmails })
+          const sellerEmailPromises = sellerTargetEmails.map((email: string) =>
+            notifySellerOfAcceptanceEmail(email, offer.id, offer.inquiryId, productName, buyerInfo).catch(e =>
+              logger.error("Email seller acceptance failed", { email, error: (e as Error).message })
+            )
+          )
+          
           if (seller.phone && seller.phone.trim() !== "") {
             if (seller.smsNotificationsEnabled) {
               await notifySellerOfAcceptanceSMS(seller.phone, offer.id).catch(e => logger.error("SMS seller acceptance failed", { error: (e as Error).message }))
@@ -161,16 +233,21 @@ export async function PATCH(req: Request) {
               logger.info("Skipping SMS notification for seller as it is disabled in profile", { sellerId: seller.id })
             }
           }
+          await Promise.allSettled(sellerEmailPromises)
           logger.info("Acceptance notifications sent to seller")
 
           // Send notification to buyer
-          logger.info("Notifying buyer", { buyerId: buyer.id })
-          if (buyer.email) {
-            await notifyBuyerOfAcceptanceEmail(buyer.email, offer.id, offer.inquiryId, productName).catch(e => logger.error("Email buyer acceptance failed", { error: (e as Error).message }))
-          }
+          logger.info("Notifying buyer emails", { buyerId: buyer.id, buyerTargetEmails })
+          const buyerEmailPromises = buyerTargetEmails.map((email: string) =>
+            notifyBuyerOfAcceptanceEmail(email, offer.id, offer.inquiryId, productName, sellerInfo).catch(e =>
+              logger.error("Email buyer acceptance failed", { email, error: (e as Error).message })
+            )
+          )
+          
           if (buyer.phone && buyer.phone.trim() !== "") {
             await notifyBuyerOfAcceptanceSMS(buyer.phone, offer.inquiryId).catch(e => logger.error("SMS buyer acceptance failed", { error: (e as Error).message }))
           }
+          await Promise.allSettled(buyerEmailPromises)
           logger.info("Acceptance notifications sent to buyer")
         } else {
           logger.warn("Missing required data for acceptance", { seller: !!seller, buyer: !!buyer, inquiry: !!inquiry })

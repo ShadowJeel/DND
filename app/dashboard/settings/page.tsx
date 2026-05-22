@@ -27,6 +27,7 @@ export default function SettingsPage() {
         categories: user?.categories || [] as string[],
         productManufacturers: user?.productManufacturers || {} as Record<string, string[]>,
         secondaryEmails: user?.secondaryEmails || [] as string[],
+        notificationEmails: user?.notificationEmails || [user?.email || ""],
         // smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
     })
     const [availableProducts, setAvailableProducts] = useState<{ id: string, name: string }[]>([])
@@ -56,6 +57,7 @@ export default function SettingsPage() {
             categories: user?.categories || [],
             productManufacturers: user?.productManufacturers || {},
             secondaryEmails: user?.secondaryEmails || [],
+            notificationEmails: user?.notificationEmails || [user?.email || ""],
             //smsNotificationsEnabled: user?.smsNotificationsEnabled ?? true,
         })
         setIsEditing(!isEditing)
@@ -71,6 +73,7 @@ export default function SettingsPage() {
             categories: user?.categories || [],
             productManufacturers: user?.productManufacturers || {},
             secondaryEmails: user?.secondaryEmails || [],
+            notificationEmails: user?.notificationEmails || [user?.email || ""],
         })
         setIsEditing(false)
     }
@@ -102,7 +105,16 @@ export default function SettingsPage() {
 
         setLoading(true)
         try {
-            const data = await updateUser(user.id, formData)
+            // Sanitize notification emails before saving:
+            // Only keep emails that are actually present (primary or secondary)
+            const sanitizedNotificationEmails = (formData.notificationEmails || []).filter(email => 
+                email === formData.email || formData.secondaryEmails.includes(email)
+            )
+            const payload = {
+                ...formData,
+                notificationEmails: sanitizedNotificationEmails
+            }
+            const data = await updateUser(user.id, payload)
 
             if (!data) {
                 throw new Error("Failed to update profile")
@@ -240,15 +252,14 @@ export default function SettingsPage() {
                                                         placeholder="Enter secondary email"
                                                     />
                                                 </div>
-                                                <Button
+                                                <button
                                                     type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                    className="btn-action-icon"
                                                     onClick={() => removeSecondaryEmail(index)}
+                                                    title="Remove secondary email"
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                    <Trash2 />
+                                                </button>
                                             </div>
                                         ))}
                                         {formData.secondaryEmails.length === 0 && (
@@ -259,6 +270,63 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
 
+                                <div className="col-span-2 space-y-3 border-t pt-4">
+                                    <Label className="text-base font-semibold">Email Notification Preferences</Label>
+                                    <p className="text-xs text-muted-foreground">Select which emails should receive notifications.</p>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center space-x-2">
+                                            <Checkbox 
+                                                id="notify-primary" 
+                                                checked={formData.notificationEmails?.includes(formData.email) ?? true} 
+                                                onCheckedChange={(checked) => {
+                                                    if (checked) {
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            notificationEmails: [...(prev.notificationEmails || []), prev.email]
+                                                        }))
+                                                    } else {
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            notificationEmails: (prev.notificationEmails || []).filter(e => e !== prev.email)
+                                                        }))
+                                                    }
+                                                }}
+                                            />
+                                            <Label htmlFor="notify-primary" className="text-sm font-medium cursor-pointer">
+                                                {formData.email} <span className="text-muted-foreground text-xs">(Primary Email)</span>
+                                            </Label>
+                                        </div>
+
+                                        {formData.secondaryEmails.map((email, index) => {
+                                            if (!email || email.trim() === "") return null;
+                                            const isChecked = formData.notificationEmails?.includes(email) ?? false;
+                                            return (
+                                                <div key={index} className="flex items-center space-x-2">
+                                                    <Checkbox 
+                                                        id={`notify-secondary-${index}`} 
+                                                        checked={isChecked} 
+                                                        onCheckedChange={(checked) => {
+                                                            if (checked) {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    notificationEmails: [...(prev.notificationEmails || []), email]
+                                                                }))
+                                                            } else {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    notificationEmails: (prev.notificationEmails || []).filter(e => e !== email)
+                                                                }))
+                                                            }
+                                                        }}
+                                                    />
+                                                    <Label htmlFor={`notify-secondary-${index}`} className="text-sm font-medium cursor-pointer">
+                                                        {email}
+                                                    </Label>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
 
                             </div>
 
@@ -354,6 +422,24 @@ export default function SettingsPage() {
                                         ))
                                     ) : (
                                         <p className="text-sm font-medium text-foreground italic">Not set</p>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="col-span-2 border-t pt-4">
+                                <label className="text-sm font-medium text-muted-foreground block mb-2">Email Notification Preferences</label>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox checked={user?.notificationEmails?.includes(user.email) ?? true} disabled />
+                                        <span className="text-sm text-foreground">{user?.email} <span className="text-muted-foreground text-xs">(Primary)</span></span>
+                                    </div>
+                                    {user?.secondaryEmails?.map((email, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <Checkbox checked={user?.notificationEmails?.includes(email) ?? false} disabled />
+                                            <span className="text-sm text-foreground">{email}</span>
+                                        </div>
+                                    ))}
+                                    {(!user?.secondaryEmails || user.secondaryEmails.length === 0) && (
+                                        <p className="text-xs text-muted-foreground italic">No secondary emails added.</p>
                                     )}
                                 </div>
                             </div>

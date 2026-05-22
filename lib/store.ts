@@ -32,6 +32,7 @@ export interface User {
   availableLocations?: Record<string, string[]>
   smsNotificationsEnabled: boolean
   secondaryEmails?: string[]
+  notificationEmails?: string[]
 }
 
 export interface InquiryItem {
@@ -109,6 +110,7 @@ function mapBuyerFromDb(row: any, id: string): User {
     createdAt: row.created_at,
     smsNotificationsEnabled: row.sms_notifications_enabled !== false, // default to true
     secondaryEmails: row.secondary_emails || [],
+    notificationEmails: (row.notification_emails && row.notification_emails.length > 0) ? row.notification_emails : [row.email],
   }
 }
 
@@ -145,6 +147,7 @@ function mapSellerFromDb(row: any, id: string): User {
     availableLocations: row.available_locations || {},
     smsNotificationsEnabled: row.sms_notifications_enabled !== false, // default to true
     secondaryEmails: row.secondary_emails || [],
+    notificationEmails: (row.notification_emails && row.notification_emails.length > 0) ? row.notification_emails : [row.email],
   }
 }
 
@@ -1288,6 +1291,7 @@ export interface UpdateUserData {
   availableLocations?: Record<string, string[]>
   smsNotificationsEnabled?: boolean
   secondaryEmails?: string[]
+  notificationEmails?: string[]
 }
 
 export async function updateUser(userId: string, updates: UpdateUserData): Promise<User | null> {
@@ -1303,6 +1307,7 @@ export async function updateUser(userId: string, updates: UpdateUserData): Promi
   if (updates.availableLocations !== undefined) updateData.available_locations = updates.availableLocations
   if (updates.smsNotificationsEnabled !== undefined) updateData.sms_notifications_enabled = updates.smsNotificationsEnabled
   if (updates.secondaryEmails !== undefined) updateData.secondary_emails = updates.secondaryEmails
+  if (updates.notificationEmails !== undefined) updateData.notification_emails = updates.notificationEmails
 
   try {
     if (userId.startsWith("BUY-")) {

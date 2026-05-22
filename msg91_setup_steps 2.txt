@@ -1,0 +1,46 @@
+MSG91 Template Setup Steps
+
+Follow these steps to configure your DLT-approved templates in MSG91 to match your application's notification payloads:
+
+Step 1: Get DLT Approval
+1. Ensure your templates are approved on your DLT platform (e.g., VI, Airtel).
+2. Copy the "DLT Template ID" provided by the DLT platform for each approved template.
+
+Step 2: Create Template in MSG91
+1. Log in to your MSG91 Control Panel (https://control.msg91.com/).
+2. Navigate to "SMS" -> "Templates" from the left sidebar.
+3. Click on the "+ Create Template" button in the top right.
+
+Step 3: Fill out the Template Details
+1. Template Name: Enter a recognizable name (e.g., "Welcome SMS").
+2. Select Sender ID: Choose your approved Sender ID from the dropdown.
+3. DLT Template ID: Paste the unique DLT Template ID you copied in Step 1.
+4. SMS Content: 
+   - Select the Language (e.g., English).
+   - Paste the exact text approved on the DLT platform.
+   - Replace the DLT variables (e.g., `{#var#}`) with MSG91 variables. 
+     MSG91 variables must be defined as `##variableName##`.
+   
+   Example Mapping based on your codebase:
+   - For Welcome SMS: 
+     DLT: "Dear {#var#}, Welcome to DND Purchase!"
+     MSG91: "Dear ##name##, Welcome to DND Purchase!"
+   
+   - For Bidding Started SMS:
+     DLT: "Hello, bidding has started for inquiry ID: {#var#} on DND Purchase."
+     MSG91: "Hello, bidding has started for inquiry ID: ##inquiryId## on DND Purchase."
+
+Step 4: Save & Apply to Codebase
+1. Click the "Create" button to save the template in MSG91.
+2. Once saved, MSG91 will generate a unique "Template ID" for this MSG91 template (an alphanumeric string).
+3. Copy this MSG91 Template ID.
+4. Open your `.env` file in the DND Purchase project.
+5. Assign the MSG91 Template ID to the corresponding environment variable:
+   - MSG91_TEMPLATE_WELCOME=...
+   - MSG91_TEMPLATE_NEW_INQUIRY=...
+   - MSG91_TEMPLATE_BIDDING_STARTED=...
+   - MSG91_TEMPLATE_NEW_OFFER=...
+   - MSG91_TEMPLATE_OFFER_ACCEPTED_BUYER=...
+   - MSG91_TEMPLATE_OFFER_ACCEPTED_SELLER=...
+   - MSG91_TEMPLATE_OFFER_REJECTED_SELLER=...
+   - MSG91_TEMPLATE_INQUIRY_CLOSED=...

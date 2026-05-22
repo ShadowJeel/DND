@@ -28,6 +28,7 @@ import Link from "next/link"
 import useSWR from "swr"
 import { getInquiriesByBuyerId, getOffersBySellerId, getOpenInquiries } from "@/lib/store"
 import { useMemo } from "react"
+import { cn } from "@/lib/utils"
 
 export default function DashboardOverview() {
   const { user, allUsers } = useAuth()
@@ -192,18 +193,12 @@ export default function DashboardOverview() {
           {/* Quick Stats Row */}
           <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
             <StatCard
-              title="Total Inquiries"
-              value={buyerStats.total}
-              subtitle="All time"
-              icon={<FileText className="h-4 w-4" />}
-              color="primary"
-            />
-            <StatCard
-              title="Active"
+              title="My Inquiries"
               value={buyerStats.active}
               subtitle="Awaiting offers"
               icon={<Clock className="h-4 w-4" />}
               color="warning"
+              href="/dashboard/inquiries?tab=current"
             />
             <StatCard
               title="In Bidding"
@@ -211,6 +206,7 @@ export default function DashboardOverview() {
               subtitle="Competitive bidding"
               icon={<Gavel className="h-4 w-4" />}
               color="secondary"
+              href="/dashboard/inquiries?tab=bidding"
             />
             <StatCard
               title="Closed"
@@ -218,6 +214,15 @@ export default function DashboardOverview() {
               subtitle="Completed"
               icon={<CheckCircle2 className="h-4 w-4" />}
               color="success"
+              href="/dashboard/inquiries?tab=closed"
+            />
+            <StatCard
+              title="Total Inquiries"
+              value={buyerStats.total}
+              subtitle="All time"
+              icon={<FileText className="h-4 w-4" />}
+              color="primary"
+              href="/dashboard/inquiries"
             />
           </div>
 
@@ -236,6 +241,7 @@ export default function DashboardOverview() {
               subtitle="Available inquiries"
               icon={<Eye className="h-4 w-4" />}
               color="primary"
+              href="/dashboard/seller/pending"
             />
             <StatCard
               title="My Offers"
@@ -243,6 +249,7 @@ export default function DashboardOverview() {
               subtitle="Submitted quotes"
               icon={<Send className="h-4 w-4" />}
               color="warning"
+              href="/dashboard/seller/submitted-offers"
             />
             <StatCard
               title="Active Bidding"
@@ -250,6 +257,7 @@ export default function DashboardOverview() {
               subtitle="In competitive phase"
               icon={<Gavel className="h-4 w-4" />}
               color="secondary"
+              href="/dashboard/seller/my-offers?tab=current"
             />
             <StatCard
               title="Accepted"
@@ -257,6 +265,7 @@ export default function DashboardOverview() {
               subtitle="Offers accepted"
               icon={<CheckCircle2 className="h-4 w-4" />}
               color="success"
+              href="/dashboard/seller/my-offers?tab=history"
             />
           </div>
 
@@ -284,8 +293,13 @@ export default function DashboardOverview() {
 
 /* ── Sub-components ── */
 
-function StatCard({ title, value, subtitle, icon, color }: {
-  title: string; value: number; subtitle: string; icon: React.ReactNode; color: "primary" | "warning" | "secondary" | "success"
+function StatCard({ title, value, subtitle, icon, color, href }: {
+  title: string;
+  value: number;
+  subtitle: string;
+  icon: React.ReactNode;
+  color: "primary" | "warning" | "secondary" | "success";
+  href?: string;
 }) {
   const colorMap = {
     primary: "bg-primary/10 text-primary",
@@ -293,8 +307,12 @@ function StatCard({ title, value, subtitle, icon, color }: {
     secondary: "bg-secondary/10 text-secondary",
     success: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   }
-  return (
-    <Card className="border-border relative overflow-hidden group hover:border-primary/20 transition-colors">
+
+  const cardContent = (
+    <Card className={cn(
+      "border-border relative overflow-hidden group transition-all duration-200",
+      href ? "hover:border-primary/40 hover:scale-[1.02] cursor-pointer hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98]" : "hover:border-primary/20"
+    )}>
       <CardContent className="p-4 md:p-5">
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{title}</p>
@@ -305,6 +323,12 @@ function StatCard({ title, value, subtitle, icon, color }: {
       </CardContent>
     </Card>
   )
+
+  if (href) {
+    return <Link href={href}>{cardContent}</Link>
+  }
+
+  return cardContent
 }
 
 

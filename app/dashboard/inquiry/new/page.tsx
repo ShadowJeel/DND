@@ -40,6 +40,18 @@ export default function NewInquiryPage() {
   const [modalStep, setModalStep] = useState<1 | 2>(1)
   const [selectedProduct, setSelectedProduct] = useState<any>(null)
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = "hidden"
+    } else {
+      document.body.style.overflow = ""
+    }
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [isModalOpen])
+
   // Single Item Config State
   const [currentItem, setCurrentItem] = useState<CartItem>({ ...emptyItem })
   const [addedItems, setAddedItems] = useState<CartItem[]>([])
@@ -428,7 +440,7 @@ export default function NewInquiryPage() {
       <div className="mb-8 mt-4">
         <h2 className="font-serif text-3xl font-bold text-foreground tracking-tight">Products</h2>
         <p className="mt-2 text-muted-foreground text-[15px]">
-          Select a product to configure specifications and submit your inquiry to receive competitive quotes.
+          Select a product, choose specification and Submit inquiry.
         </p>
       </div>
 
@@ -476,7 +488,7 @@ export default function NewInquiryPage() {
                     onClick={() => handleOpenModal(p)}
                     className="w-full bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground font-bold rounded-xl transition-colors shadow-none"
                   >
-                    ADD
+                    SELECT
                   </Button>
                 </div>
               </div>
@@ -728,7 +740,7 @@ export default function NewInquiryPage() {
                                       This information will be provided by the seller in a tabular format when they submit their quotation.
                                     </p>
                                     {(opt.table_columns && opt.table_columns.length > 0) && (
-                                      <div className="rounded-md border border-border/40 overflow-hidden mt-2">
+                                      <div className="rounded-md border border-border/40 overflow-x-auto mt-2">
                                         <table className="w-full text-xs">
                                           <thead>
                                             <tr className="bg-muted/30 border-b border-border/40">
@@ -817,14 +829,14 @@ export default function NewInquiryPage() {
                             {item.product}
                             {item.sub_product && <span className="text-muted-foreground font-semibold ml-1">({item.sub_product})</span>}
                           </h3>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 rounded-full hover:bg-destructive/10 hover:text-destructive"
+                          <button
+                            type="button"
+                            className="btn-action-icon !w-6 !h-6"
                             onClick={() => setAddedItems(prev => prev.filter((_, i) => i !== idx))}
+                            title="Remove item"
                           >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
+                            <X />
+                          </button>
                         </div>
                         <div className="p-4 grid grid-cols-2 gap-x-6 gap-y-4">
                           {Object.entries(item.options || {}).map(([k, v]) => (
@@ -900,25 +912,25 @@ export default function NewInquiryPage() {
 
             {/* Modal Footer */}
             <div className="border-t border-border bg-muted/10">
-              <div className="px-6 py-5 flex items-center justify-between gap-3">
-                <div>
+              <div className="px-4 sm:px-6 py-4 sm:py-5 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-3">
+                <div className="w-full sm:w-auto flex justify-center sm:justify-start">
                   {!isAllTableProduct && modalStep === 2 && (
-                    <Button variant="ghost" onClick={() => setModalStep(1)} className="font-medium text-muted-foreground hover:text-foreground">
+                    <Button variant="ghost" onClick={() => setModalStep(1)} className="w-full sm:w-auto font-medium text-muted-foreground hover:text-foreground">
                       Back to Requirements
                     </Button>
                   )}
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-col-reverse sm:flex-row gap-3 w-full sm:w-auto">
                   {isAllTableProduct ? (
-                    <Button variant="outline" onClick={handleCloseModal} className="font-medium rounded-xl px-6">Close</Button>
+                    <Button variant="outline" onClick={handleCloseModal} className="w-full sm:w-auto font-medium rounded-xl px-6">Close</Button>
                   ) : (
                     <>
-                      <Button variant="outline" onClick={handleCloseModal} className="font-medium rounded-xl">Cancel</Button>
+                      <Button variant="outline" onClick={handleCloseModal} className="w-full sm:w-auto font-medium rounded-xl">Cancel</Button>
                       {modalStep === 1 ? (
                         <Button
                           onClick={handleAddItem}
                           variant="outline"
-                          className="font-bold rounded-xl border-primary text-primary hover:bg-primary/5 px-6"
+                          className="w-full sm:w-auto font-bold rounded-xl border-primary text-primary hover:bg-primary/5 px-6"
                         >
                           Add Item
                         </Button>
@@ -926,7 +938,7 @@ export default function NewInquiryPage() {
                         <Button
                           onClick={handleSubmitInquiry}
                           disabled={submitting}
-                          className="font-bold px-8 rounded-xl bg-orange-500 hover:bg-orange-600 text-white border-none shadow-sm gap-2"
+                          className="w-full sm:w-auto font-bold px-8 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 border-none shadow-sm gap-2 flex items-center justify-center"
                         >
                           {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                           Submit Inquiry
@@ -936,6 +948,7 @@ export default function NewInquiryPage() {
                   )}
                 </div>
               </div>
+            </div>
 
               {/* Added Items Preview below buttons - only in Step 1, not for all-table products */}
               {!isAllTableProduct && modalStep === 1 && addedItems.length > 0 && (
@@ -957,14 +970,14 @@ export default function NewInquiryPage() {
                             {item.remarks && ` · Remarks: ${item.remarks}`}
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 rounded-full hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                        <button
+                          type="button"
+                          className="btn-action-icon !w-6 !h-6"
                           onClick={() => setAddedItems(prev => prev.filter((_, i) => i !== idx))}
+                          title="Remove item"
                         >
-                          <X className="h-3 w-3" />
-                        </Button>
+                          <X />
+                        </button>
                       </div>
                     ))}
                     <div className="pt-2 border-t border-border/20 mt-4">
@@ -981,7 +994,6 @@ export default function NewInquiryPage() {
             </div>
 
           </div>
-        </div>
       )}
     </div >
   )

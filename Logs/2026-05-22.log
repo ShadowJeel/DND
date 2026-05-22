@@ -1,0 +1,30 @@
+[2026-05-22T07:55:55.729Z] ERROR Error in buyer notification receipt flow {"error":"Missing or insufficient permissions."}
+[2026-05-22T07:55:55.933Z] INFO New inquiry created, sending targeted notifications {"inquiryId":"INQ-0002","categories":["Cement"],"targetedSellerCount":0}
+[2026-05-22T07:55:55.933Z] WARN No verified sellers found for inquiry notification
+[2026-05-22T08:01:49.904Z] ERROR Error in buyer notification receipt flow {"error":"Missing or insufficient permissions."}
+[2026-05-22T08:01:50.140Z] INFO New inquiry created, sending targeted notifications {"inquiryId":"INQ-0003","categories":["Cement"],"targetedSellerCount":0}
+[2026-05-22T08:01:50.141Z] WARN No verified sellers found for inquiry notification
+[2026-05-22T08:03:41.697Z] ERROR Error in buyer notification receipt flow {"error":"Missing or insufficient permissions."}
+[2026-05-22T08:03:41.869Z] INFO New inquiry created, sending targeted notifications {"inquiryId":"INQ-0004","categories":["Cement"],"targetedSellerCount":0}
+[2026-05-22T08:03:41.869Z] WARN No verified sellers found for inquiry notification
+[2026-05-22T08:57:39.402Z] WARN MSG91_AUTH_KEY not configured. Simulating SMS send. {"payload":{"template_id":"SIMULATED","recipients":[{"mobiles":"****8391","name":"User"}]}}
+[2026-05-22T08:57:39.400Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-22T09:04:28.077Z] ERROR Error in buyer notification receipt flow {"error":"Missing or insufficient permissions."}
+[2026-05-22T09:04:28.121Z] INFO New inquiry created, sending targeted notifications {"inquiryId":"INQ-0005","categories":["Cement"],"targetedSellerCount":0}
+[2026-05-22T09:04:28.122Z] WARN No verified sellers found for inquiry notification
+[2026-05-22T11:41:28.617Z] INFO New offer submitted {"inquiryId":"INQ-0005"}
+[2026-05-22T11:41:28.643Z] ERROR Failed to send notification for new offer {"error":"Missing or insufficient permissions."}
+[2026-05-22T12:06:37.667Z] INFO Server signed in successfully as buyer {"email":"[redacted-email]"}
+[2026-05-22T12:06:37.916Z] INFO Sending inquiry receipt emails to buyer {"buyerId":"BUY-0001","inquiryId":"INQ-0006","targetEmails":["[redacted-email]"]}
+[2026-05-22T12:06:40.260Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-22T12:06:40.315Z] INFO New inquiry created, sending targeted notifications {"inquiryId":"INQ-0006","categories":["Cement"],"targetedSellerCount":0}
+[2026-05-22T12:06:40.317Z] WARN No verified sellers found for inquiry notification
+[2026-05-22T12:11:11.677Z] INFO Server signed in successfully as buyer {"email":"[redacted-email]"}
+[2026-05-22T12:11:11.905Z] INFO Sending inquiry receipt emails to buyer {"buyerId":"BUY-0001","inquiryId":"INQ-0007","targetEmails":["[redacted-email]"]}
+[2026-05-22T12:11:14.289Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-22T12:11:14.355Z] WARN MSG91_AUTH_KEY not configured. Simulating SMS send. {"payload":{"template_id":"SIMULATED","recipients":[{"mobiles":"+****1006"}]}}
+[2026-05-22T12:11:14.358Z] WARN MSG91_AUTH_KEY not configured. Simulating SMS send. {"payload":{"template_id":"SIMULATED","recipients":[{"mobiles":"****8391"}]}}
+[2026-05-22T12:11:14.353Z] INFO New inquiry created, sending targeted notifications {"inquiryId":"INQ-0007","categories":["Cement"],"targetedSellerCount":2}
+[2026-05-22T12:11:16.749Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-22T12:11:16.843Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-22T12:11:16.845Z] INFO New inquiry notifications complete

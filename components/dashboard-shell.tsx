@@ -3,7 +3,6 @@
 import React from "react"
 
 import { LogoSimple } from "@/components/logo"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useAuth } from "@/lib/auth-context"
@@ -77,7 +76,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const uniqueNav = navItems.filter((item, idx, arr) => arr.findIndex((i) => i.href === item.href) === idx)
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-screen ">
       {/* Sidebar */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-transform lg:static lg:translate-x-0",
@@ -149,7 +148,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {sidebarOpen && <div className="fixed inset-0 z-40 bg-foreground/20 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col min-w-0 overflow-x-hidden">
         <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-border bg-card px-4 md:px-6 py-2.5 md:py-3">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(true)} className="lg:hidden" aria-label="Open sidebar">
@@ -168,10 +167,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             <div id="header-actions" className="flex items-center gap-2">
             </div>
-            <ThemeToggle />
           </div>
         </header>
-        <main className="flex-1 p-4 md:p-6">{children}</main>
+        <main className="flex-1 p-4 md:p-6 min-w-0">{children}</main>
       </div>
     </div>
   )

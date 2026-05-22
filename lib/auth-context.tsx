@@ -27,6 +27,7 @@ interface AuthUser {
   availableLocations?: Record<string, string[]>
   smsNotificationsEnabled: boolean;
   secondaryEmails?: string[];
+  notificationEmails?: string[];
 }
 
 interface AuthContextType {

@@ -462,8 +462,8 @@ export default function SellerPendingPage() {
 
       {/* Inquiry Detail Dialog */}
       <Dialog open={!!selectedInquiry} onOpenChange={() => { setSelectedInquiry(null); setQuoteItem(null); setEditingOffer(null); setSelectedFiles([]); }}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader className="pb-4 border-b border-border">
+        <DialogContent className="w-[calc(100vw-1.5rem)] md:w-full max-w-4xl max-h-[90vh] overflow-y-auto p-4 md:p-6">
+          <DialogHeader className="pb-4 border-b border-border pr-8 md:pr-0">
             <DialogTitle className="font-serif text-xl text-foreground flex flex-wrap items-center gap-3">
               Inquiry {selectedInquiry?.id}
               {selectedInquiry?.status === "bidding" && selectedInquiry?.biddingDeadline && (
@@ -490,13 +490,13 @@ export default function SellerPendingPage() {
                 </div>
               )}
 
-              <div className="rounded-md border border-border overflow-x-auto">
+              {/* Desktop View Table */}
+              <div className="hidden md:block rounded-md border border-border overflow-x-auto">
                 <Table className="min-w-[600px]">
                   <TableHeader className="bg-muted/50">
                     <TableRow>
                       <TableHead className="text-foreground font-semibold">Product</TableHead>
                       <TableHead className="text-foreground font-semibold">Specifications</TableHead>
-
                       <TableHead className="text-right text-foreground font-semibold">Action</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -579,6 +579,106 @@ export default function SellerPendingPage() {
                     })}
                   </TableBody>
                 </Table>
+              </div>
+
+              {/* Mobile View Stack */}
+              <div className="block md:hidden space-y-4">
+                {selectedInquiry.items.map((item) => {
+                  const itemOffer = myOffers?.find((o: any) => o.inquiryItemId === item.id)
+                  const isAccepted = itemOffer?.status === "accepted"
+
+                  return (
+                    <div key={item.id} className="bg-muted/10 border border-border rounded-lg p-4 space-y-4">
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-foreground text-sm flex items-center gap-2">
+                          <Package className="h-4 w-4 text-primary shrink-0" />
+                          {item.product}
+                        </span>
+                        {item.sub_product && (
+                          <span className="text-[11px] text-muted-foreground font-normal mt-0.5 ml-6">
+                            ({item.sub_product})
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Specifications */}
+                      <div className="space-y-2">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold block">Specifications</span>
+                        <div className="flex flex-wrap gap-2">
+                          {sortInquiryOptions(item.options || {}, allProductOptions[`${item.product}|${item.sub_product || ""}`]).map(([k, v]) => {
+                            const valStr = Array.isArray(v) ? v.join(", ") : v;
+                            if (!valStr) return null;
+                            return (
+                              <div key={k} className="bg-background border border-border shadow-sm rounded-md px-2 py-1 flex flex-col min-w-[100px]">
+                                <span className="text-[9px] uppercase tracking-wider text-muted-foreground/80 font-medium mb-0.5">{formatOptionLabel(k)}</span>
+                                <span className="font-semibold text-foreground text-xs">{valStr}</span>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Remarks */}
+                      {item.remarks && (
+                        <div className="bg-primary/5 border border-primary/10 shadow-sm rounded-md p-3">
+                          <span className="text-[10px] uppercase tracking-wider text-primary/80 font-bold block mb-1 flex items-center gap-1.5">
+                            <FileText className="h-3 w-3" /> Buyer's Remarks
+                          </span>
+                          <span className="font-medium text-foreground text-xs italic leading-relaxed">
+                            {item.remarks}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Action */}
+                      <div className="pt-2 border-t border-border/50">
+                        {itemOffer ? (
+                          <Button
+                            size="sm"
+                            variant={isAccepted ? "secondary" : "outline"}
+                            className="w-full h-9 gap-1.5 text-xs"
+                            onClick={() => {
+                              setQuoteItem(item)
+                              setEditingOffer(itemOffer)
+                              setSelectedFiles([])
+                              setPricePerTon(itemOffer.pricePerTon.toString())
+                              setContactEmail(itemOffer.contactEmail || user?.email || "")
+                              setContactPhone(itemOffer.contactPhone || user?.phone || "")
+                              setQuoteComments(itemOffer.comments || "")
+
+                              const { dispatch_state, dispatch_district, ...restOptions } = itemOffer.sellerOptions || {} as any;
+                              setSellerOptionsState(restOptions || {})
+                              setDispatchLocation({
+                                state: dispatch_state || "",
+                                district: dispatch_district || ""
+                              })
+                            }}
+                          >
+                            {isAccepted ? <><FileText className="h-3.5 w-3.5" /> View Quote</> : <><Edit className="h-3.5 w-3.5" /> Edit quote</>}
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="w-full h-9 gap-1.5 text-xs"
+                            onClick={() => {
+                              setQuoteItem(item)
+                              setEditingOffer(null)
+                              setSelectedFiles([])
+                              setPricePerTon("")
+                              setContactEmail(user?.email || "")
+                              setContactPhone(user?.phone || "")
+                              setQuoteComments("")
+                              setSellerOptionsState({})
+                              setDispatchLocation({ state: "", district: "" })
+                            }}
+                          >
+                            <Send className="h-3.5 w-3.5" /> Offer Quote
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )}
@@ -712,15 +812,14 @@ export default function SellerPendingPage() {
                                       ))}
                                       <td className="px-2 py-1.5 text-right">
                                         {editingOffer?.status !== "accepted" && (
-                                          <Button
+                                          <button
                                             type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
+                                            className="btn-action-icon !w-6 !h-6"
                                             onClick={() => removeRow(rowIdx)}
+                                            title="Remove row"
                                           >
-                                            <Trash2 className="h-3 w-3" />
-                                          </Button>
+                                            <Trash2 />
+                                          </button>
                                         )}
                                       </td>
                                     </tr>
@@ -850,15 +949,14 @@ export default function SellerPendingPage() {
                             <FileText className="h-4 w-4 shrink-0 text-primary" />
                             <span className="text-xs truncate">{file.name}</span>
                           </div>
-                          <Button
+                          <button
                             type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
+                            className="btn-action-icon !w-6 !h-6"
                             onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== idx))}
+                            title="Remove attachment"
                           >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                            <Trash2 />
+                          </button>
                         </div>
                       ))}
 

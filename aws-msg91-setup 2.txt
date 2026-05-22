@@ -1,0 +1,92 @@
+=========================================================
+      AWS SES & MSG91 SMS INTEGRATION SETUP GUIDE
+=========================================================
+
+This guide walks you through setting up AWS SES for transactional emails and MSG91 for SMS notifications.
+
+---------------------------------------------------------
+PART 1: AWS SES (Simple Email Service) SETUP
+---------------------------------------------------------
+
+1. CREATE AN AWS ACCOUNT
+   - Go to https://aws.amazon.com/ and create a new AWS account if you don't have one.
+
+2. VERIFY YOUR DOMAIN IDENTITY
+   - Go to the "Amazon SES" console.
+   - Click "Verified identities" in the left sidebar.
+   - Click "Create identity".
+   - Select "Domain" and enter your domain name (e.g., yourcompany.com).
+   - AWS will provide CNAME records. Add these records to your domain's DNS settings (GoDaddy, Route53, etc.) to verify ownership.
+   - Wait for the Identity Status to change to "Verified".
+
+3. CREATE AN IAM USER FOR API ACCESS
+   - Go to the "IAM" (Identity and Access Management) console.
+   - Click "Users" -> "Add users".
+   - Name the user (e.g., "ses-dnd-app-user"). Do NOT check "Provide user access to the AWS Management Console".
+   - Click "Next". Under "Permissions options", choose "Attach policies directly".
+   - Search for and check "AmazonSESFullAccess".
+   - Click "Next" -> "Create user".
+   - Click on the newly created user, go to the "Security credentials" tab.
+   - Scroll down to "Access keys" and click "Create access key".
+   - Choose "Application running outside AWS", click "Next" -> "Create".
+   - IMPORTANT: Copy the "Access key ID" and "Secret access key". You will need these for your .env file!
+
+4. MOVE OUT OF SES SANDBOX (For Production)
+   - By default, SES is in sandbox mode (you can only send emails to verified addresses).
+   - In the SES Console, look for a banner or the "Account dashboard" to "Request production access".
+   - Provide details about your application and how you manage bounces/complaints. Wait for AWS approval (usually 24 hours).
+
+---------------------------------------------------------
+PART 2: MSG91 SMS SETUP
+---------------------------------------------------------
+
+1. CREATE A MSG91 ACCOUNT
+   - Go to https://msg91.com/ and sign up.
+
+2. GET YOUR AUTH KEY
+   - In your MSG91 Dashboard, click on your Profile/Settings -> "Authkey".
+   - Generate a new Auth Key or copy the existing one.
+
+3. CREATE FLOW TEMPLATES
+   - Go to "Flow Builder" in the MSG91 dashboard.
+   - You need to create separate templates for each notification. 
+   - Note the "Template ID" (or Flow ID) for each.
+
+   Templates you need to create:
+   - Welcome SMS (Variables: {#name#})
+   - New Inquiry (No variables)
+   - Bidding Started (Variables: {#inquiryId#})
+   - New Offer (Variables: {#inquiryId#})
+   - Offer Accepted - Buyer (Variables: {#offerId#})
+   - Offer Accepted - Seller (Variables: {#offerId#})
+   - Offer Rejected - Seller (Variables: {#offerId#})
+   - Inquiry Closed (Variables: {#inquiryId#})
+
+---------------------------------------------------------
+PART 3: ENVIRONMENT VARIABLES (.env)
+---------------------------------------------------------
+
+Add these exact variables to your application's .env file:
+
+# AWS SES Configuration
+AWS_REGION="ap-south-1" # e.g. ap-south-1, us-east-1
+AWS_ACCESS_KEY_ID="your_iam_access_key"
+AWS_SECRET_ACCESS_KEY="your_iam_secret_key"
+EMAIL_FROM_ADDRESS="no-reply@yourdomain.com"
+EMAIL_TEST_MODE="false" # Set to true to disable sending in dev
+
+# MSG91 SMS Configuration
+MSG91_AUTH_KEY="your_msg91_auth_key"
+SMS_TEST_MODE="false"
+
+# MSG91 Flow Template IDs
+MSG91_TEMPLATE_WELCOME="your_template_id_here"
+MSG91_TEMPLATE_NEW_INQUIRY="your_template_id_here"
+MSG91_TEMPLATE_BIDDING_STARTED="your_template_id_here"
+MSG91_TEMPLATE_NEW_OFFER="your_template_id_here"
+MSG91_TEMPLATE_OFFER_ACCEPTED_BUYER="your_template_id_here"
+MSG91_TEMPLATE_OFFER_ACCEPTED_SELLER="your_template_id_here"
+MSG91_TEMPLATE_OFFER_REJECTED_SELLER="your_template_id_here"
+MSG91_TEMPLATE_INQUIRY_CLOSED="your_template_id_here"
+
+=========================================================

@@ -85,7 +85,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8 md:py-12">
+    <div className="flex min-h-screen items-center justify-center  px-4 py-8 md:py-12">
       <div className="w-full max-w-md">
         <Link
           href="/"
@@ -95,12 +95,12 @@ export default function LoginPage() {
           Back to home
         </Link>
 
-        <Card className="border-border">
+        <Card className="card-glossy">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-3 md:mb-4 flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-xl bg-primary">
-              <Factory className="h-5 w-5 md:h-6 md:w-6 text-primary-foreground" />
+            <div className="mx-auto mb-4 flex items-center justify-center">
+              <img src="/logo-asset-4.png" alt="DND Purchase" className="h-14 md:h-16 w-auto object-contain" />
             </div>
-            <CardTitle className="font-serif text-2xl text-foreground">Welcome back</CardTitle>
+            <CardTitle className="text-2xl text-foreground font-bold tracking-tight text-metallic">Welcome back</CardTitle>
             <CardDescription className="text-muted-foreground">
               Sign in to your DND Purchase account
             </CardDescription>
@@ -148,7 +148,7 @@ export default function LoginPage() {
                   <span className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                  <span className=" px-2 text-muted-foreground">Or continue with</span>
                 </div>
               </div>
               <Button type="button" variant="outline" className="w-full" disabled={loading} onClick={handleGoogleLogin}>
