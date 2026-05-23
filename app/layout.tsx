@@ -10,8 +10,36 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' })
 
 export const metadata: Metadata = {
-  title: 'DND Purchase - B2B Industrial Raw Materials Marketplace',
-  description: 'High-precision B2B marketplace for industrial raw materials. Connect verified buyers and sellers for Steel, Cement, TMT Rebars and more.',
+  title: "DnD Purchase - Do Not Disturb B2B Marketplace",
+  description:
+    "Buy and sell industrial raw materials like Steel and Cement without annoying phone calls or follow-ups. A true Do Not Disturb (DnD) marketplace.",
+  keywords: [
+    "dnd",
+    "dnd purchase",
+    "do not disturb purchase",
+    "do not disturb marketplace",
+    "b2b marketplace",
+    "buy steel",
+    "buy cement",
+    "industrial raw materials",
+  ],
+  metadataBase: new URL("https://dndpurchase.com"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "DnD Purchase - Do Not Disturb B2B Marketplace",
+    description: "Buy and sell industrial raw materials like Steel and Cement without annoying phone calls or follow-ups. A true Do Not Disturb (DnD) marketplace.",
+    url: "https://dndpurchase.com",
+    siteName: "DnD Purchase",
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DnD Purchase - Do Not Disturb B2B Marketplace",
+    description: "Buy and sell industrial raw materials like Steel and Cement without annoying phone calls or follow-ups. A true Do Not Disturb (DnD) marketplace.",
+  },
 }
 
 export default function RootLayout({

@@ -190,7 +190,7 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                     {isEditing ? (
                         <div className="space-y-6">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="name">Name *</Label>
                                     <Input
@@ -379,7 +379,7 @@ export default function SettingsPage() {
                             </div>
                             */}
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
                                 <div className="space-y-2">
                                     <Label htmlFor="userCode">{user?.role === 'buyer' ? 'Buyer Code' : 'Seller Code'} (Read-only)</Label>
                                     <Input
@@ -415,22 +415,22 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="min-w-0">
                                 <label className="text-sm font-medium text-muted-foreground">Name</label>
-                                <p className="font-medium text-foreground">{user?.name}</p>
+                                <p className="font-medium text-foreground break-words">{user?.name}</p>
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <label className="text-sm font-medium text-muted-foreground">{user?.role === 'buyer' ? 'Buyer Code' : 'Seller Code'}</label>
-                                <p className="font-medium text-foreground">{user?.userCode}</p>
+                                <p className="font-medium text-foreground break-all">{user?.userCode}</p>
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <label className="text-sm font-medium text-muted-foreground">Email</label>
-                                <p className="font-medium text-foreground">{user?.email}</p>
+                                <p className="font-medium text-foreground break-all">{user?.email}</p>
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <label className="text-sm font-medium text-muted-foreground">Phone</label>
-                                <p className="font-medium text-foreground">{user?.phone}</p>
+                                <p className="font-medium text-foreground break-all">{user?.phone}</p>
                             </div>
                             <div className="col-span-2">
                                 <label className="text-sm font-medium text-muted-foreground">Secondary Emails</label>
@@ -478,16 +478,16 @@ export default function SettingsPage() {
                                     )}
                                 </div>
                             </div>
-                            <div>
+                            <div className="min-w-0">
                                 <label className="text-sm font-medium text-muted-foreground">Role</label>
-                                <p className="font-medium text-foreground capitalize">{user?.role}</p>
+                                <p className="font-medium text-foreground capitalize break-words">{user?.role}</p>
                             </div>
                             {user?.company && (
-                                <div>
+                                <div className="min-w-0">
                                     <label className="text-sm font-medium text-muted-foreground">Company</label>
-                                    <div className="flex items-center gap-1.5">
-                                        <p className="font-medium text-foreground">{user.company}</p>
-                                        {user.verified && <BadgeCheck className="h-4 w-4 text-blue-500" />}
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <p className="font-medium text-foreground break-words">{user.company}</p>
+                                        {user.verified && <BadgeCheck className="h-4 w-4 text-blue-500 flex-shrink-0" />}
                                     </div>
                                 </div>
                             )}
