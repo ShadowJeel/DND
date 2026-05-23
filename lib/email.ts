@@ -238,7 +238,6 @@ export async function sendInquirySubmissionReceiptEmail(to: string, inquiry: any
                 <tr style="background-color: #f7f7f7; text-align: left; border-bottom: 2px solid #ddd;">
                     <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: #555;">#</th>
                     <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: #555;">Product</th>
-                    <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: #555;">Payment Terms</th>
                     <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: #555;">Specifications</th>
                     <th style="padding: 12px; font-size: 13px; text-transform: uppercase; color: #555;">Remarks</th>
                 </tr>
@@ -310,6 +309,35 @@ export async function notifySellerOfInquiryClosedEmail(to: string, inquiryId: st
       <p>Best Regards,<br/>DND Purchase Team <br>www.dndpurchase.com  <br>
         <img src="Asset 4.png" alt="Asset 4" style="max-width: 100%; height: auto; display: block; margin-top: 12px;" />
       </p>    </div>
+  `
+    return sendEmail({ to, subject, html })
+}
+
+export async function notifyBuyerOfInquiryDeletedEmail(to: string, inquiryId: string, productName: string) {
+    const subject = `Inquiry Cancelled: ${productName}`
+    const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333;">
+      <h2>Inquiry Cancelled</h2>
+      <p>Your Inquiry #${inquiryId} for <strong>${productName}</strong> has been successfully cancelled/deleted.</p>
+      <p>Best Regards,<br/>DND Purchase Team <br>www.dndpurchase.com  <br>
+        <img src="https://www.dndpurchase.com/logo-asset-4.png" alt="DND Purchase Logo" style="max-width: 150px; height: auto; display: block; margin-top: 12px;" />
+      </p>
+    </div>
+  `
+    return sendEmail({ to, subject, html })
+}
+
+export async function notifySellerOfInquiryDeletedEmail(to: string, inquiryId: string, productName: string) {
+    const subject = `Inquiry Cancelled: ${productName}`
+    const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333;">
+      <h2>Inquiry Update</h2>
+      <p>The Inquiry #${inquiryId} for <strong>${productName}</strong> has been cancelled/deleted by the buyer.</p>
+      <p>Any pending offers for this inquiry will no longer be considered.</p>
+      <p>Best Regards,<br/>DND Purchase Team <br>www.dndpurchase.com  <br>
+        <img src="https://www.dndpurchase.com/logo-asset-4.png" alt="DND Purchase Logo" style="max-width: 150px; height: auto; display: block; margin-top: 12px;" />
+      </p>
+    </div>
   `
     return sendEmail({ to, subject, html })
 }

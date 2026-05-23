@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Suspense, useState, useMemo, useEffect } from "react"
 import { toast } from "sonner"
 import useSWR, { mutate as globalMutate } from "swr"
-import { getInquiryById, getOffersByInquiryId, getInquiriesByBuyerId, acceptOffer, disqualifyOffer, closeInquiry, revertOfferToPending, activateBidding, startBidding } from "@/lib/store"
+import { getInquiryById, getOffersByInquiryId, getInquiriesByBuyerId, acceptOffer, disqualifyOffer, closeInquiry, revertOfferToPending } from "@/lib/store"
 import { formatOptionLabel, sortInquiryOptions } from "@/lib/utils"
 
 function rankBadge(rank?: number) {
@@ -128,7 +128,14 @@ function OffersContent() {
       if (offerId) {
         await revertOfferToPending(offerId)
       }
-      if (inquiryId) await activateBidding(inquiryId, 3)
+      if (inquiryId) {
+        const res = await fetch(`/api/inquiries/${inquiryId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "activate-bidding", durationInDays: 3 })
+        })
+        if (!res.ok) throw new Error("Failed to resume bidding via API")
+      }
 
       mutate()
       if (mutateInquiry) mutateInquiry()
@@ -150,7 +157,12 @@ function OffersContent() {
     setIsSubmittingBidding(true)
     try {
       if (inquiryId) {
-        await startBidding(inquiryId, duration)
+        const res = await fetch(`/api/inquiries/${inquiryId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "start-bidding", durationInDays: duration })
+        })
+        if (!res.ok) throw new Error("Failed to start bidding via API")
         toast.success(`Bidding started for ${duration} days!`)
         setIsStartBiddingDialogOpen(false)
         mutate()

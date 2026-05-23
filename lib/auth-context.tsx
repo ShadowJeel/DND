@@ -28,6 +28,7 @@ interface AuthUser {
   smsNotificationsEnabled: boolean;
   secondaryEmails?: string[];
   notificationEmails?: string[];
+  verifiedSecondaryEmails?: string[];
 }
 
 interface AuthContextType {

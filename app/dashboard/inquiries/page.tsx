@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FileText, ArrowRight, Plus, Clock, RotateCcw, MapPin, Package } from "lucide-react"
 import useSWR, { mutate as globalMutate } from "swr"
-import { getInquiriesByBuyerId, getOffersByInquiryId, softDeleteOffer, activateBidding, closeInquiry, softDeleteInquiry } from "@/lib/store"
+import { getInquiriesByBuyerId, getOffersByInquiryId, softDeleteOffer, closeInquiry } from "@/lib/store"
 import { toast } from "sonner"
 import { formatOptionLabel, sortInquiryOptions } from "@/lib/utils"
 
@@ -102,7 +102,12 @@ function InquiriesContent() {
       if (acceptedOffer) {
         await softDeleteOffer(acceptedOffer.id)
       }
-      await activateBidding(rebidDialogState.inquiryId, days)
+      const res = await fetch(`/api/inquiries/${rebidDialogState.inquiryId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "activate-bidding", durationInDays: days })
+      })
+      if (!res.ok) throw new Error("Failed to resume bidding via API")
       mutate()
       globalMutate("open-inquiries")
       toast.success(`Bidding resumed for ${days} days.`)
@@ -126,7 +131,12 @@ function InquiriesContent() {
   const handleDelete = async (inqId: string) => {
     if (!confirm("Are you sure you want to delete this inquiry? This action cannot be undone.")) return
     try {
-      await softDeleteInquiry(inqId, user!.id)
+      const res = await fetch(`/api/inquiries/${inqId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", userId: user!.id })
+      })
+      if (!res.ok) throw new Error("Failed to delete inquiry via API")
       mutate()
       globalMutate("open-inquiries")
       toast.success("Inquiry deleted successfully.")

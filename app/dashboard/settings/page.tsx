@@ -110,9 +110,13 @@ export default function SettingsPage() {
             const sanitizedNotificationEmails = (formData.notificationEmails || []).filter(email => 
                 email === formData.email || formData.secondaryEmails.includes(email)
             )
+            const sanitizedVerifiedSecondaryEmails = (user.verifiedSecondaryEmails || []).filter(email => 
+                formData.secondaryEmails.includes(email)
+            )
             const payload = {
                 ...formData,
-                notificationEmails: sanitizedNotificationEmails
+                notificationEmails: sanitizedNotificationEmails,
+                verifiedSecondaryEmails: sanitizedVerifiedSecondaryEmails
             }
             const data = await updateUser(user.id, payload)
 
@@ -240,28 +244,39 @@ export default function SettingsPage() {
                                         </Button>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {formData.secondaryEmails.map((email, index) => (
-                                            <div key={index} className="flex gap-2 items-end">
-                                                <div className="flex-1 space-y-2">
-                                                    <Label htmlFor={`secondaryEmail-${index}`}>Secondary Email {index + 1}</Label>
-                                                    <Input
-                                                        id={`secondaryEmail-${index}`}
-                                                        type="email"
-                                                        value={email}
-                                                        onChange={(e) => updateSecondaryEmail(index, e.target.value)}
-                                                        placeholder="Enter secondary email"
-                                                    />
+                                        {formData.secondaryEmails.map((email, index) => {
+                                            const isVerified = user?.verifiedSecondaryEmails?.includes(email) ?? false;
+                                            return (
+                                                <div key={index} className="flex gap-2 items-end">
+                                                    <div className="flex-1 space-y-2">
+                                                        <Label htmlFor={`secondaryEmail-${index}`}>Secondary Email {index + 1}</Label>
+                                                        <div className="relative">
+                                                            <Input
+                                                                id={`secondaryEmail-${index}`}
+                                                                type="email"
+                                                                value={email}
+                                                                onChange={(e) => updateSecondaryEmail(index, e.target.value)}
+                                                                placeholder="Enter secondary email"
+                                                                className={isVerified ? "pr-8" : ""}
+                                                            />
+                                                            {isVerified && (
+                                                                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                                                    <BadgeCheck className="h-4 w-4 text-blue-500 fill-blue-500/10" />
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        className="btn-action-icon flex-shrink-0"
+                                                        onClick={() => removeSecondaryEmail(index)}
+                                                        title="Remove secondary email"
+                                                    >
+                                                        <Trash2 />
+                                                    </button>
                                                 </div>
-                                                <button
-                                                    type="button"
-                                                    className="btn-action-icon"
-                                                    onClick={() => removeSecondaryEmail(index)}
-                                                    title="Remove secondary email"
-                                                >
-                                                    <Trash2 />
-                                                </button>
-                                            </div>
-                                        ))}
+                                            );
+                                        })}
                                         {formData.secondaryEmails.length === 0 && (
                                             <p className="text-sm text-muted-foreground italic col-span-2">
                                                 No secondary emails added.
@@ -300,6 +315,7 @@ export default function SettingsPage() {
                                         {formData.secondaryEmails.map((email, index) => {
                                             if (!email || email.trim() === "") return null;
                                             const isChecked = formData.notificationEmails?.includes(email) ?? false;
+                                            const isVerified = user?.verifiedSecondaryEmails?.includes(email) ?? false;
                                             return (
                                                 <div key={index} className="flex items-center space-x-2">
                                                     <Checkbox 
@@ -319,8 +335,13 @@ export default function SettingsPage() {
                                                             }
                                                         }}
                                                     />
-                                                    <Label htmlFor={`notify-secondary-${index}`} className="text-sm font-medium cursor-pointer">
+                                                    <Label htmlFor={`notify-secondary-${index}`} className="text-sm font-medium cursor-pointer flex items-center gap-1.5">
                                                         {email}
+                                                        {isVerified ? (
+                                                            <BadgeCheck className="h-4 w-4 text-blue-500 fill-blue-500/10" />
+                                                        ) : (
+                                                            <span className="text-xs text-amber-500 font-normal">(Pending verification)</span>
+                                                        )}
                                                     </Label>
                                                 </div>
                                             )
@@ -415,11 +436,15 @@ export default function SettingsPage() {
                                 <label className="text-sm font-medium text-muted-foreground">Secondary Emails</label>
                                 <div className="mt-1 flex flex-wrap gap-2">
                                     {user?.secondaryEmails && user.secondaryEmails.length > 0 ? (
-                                        user.secondaryEmails.map((email, i) => (
-                                            <span key={i} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
-                                                {email}
-                                            </span>
-                                        ))
+                                        user.secondaryEmails.map((email, i) => {
+                                            const isVerified = user?.verifiedSecondaryEmails?.includes(email) ?? false;
+                                            return (
+                                                <span key={i} className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                                                    {email}
+                                                    {isVerified && <BadgeCheck className="h-3.5 w-3.5 text-blue-500 fill-blue-500/10 flex-shrink-0" />}
+                                                </span>
+                                            );
+                                        })
                                     ) : (
                                         <p className="text-sm font-medium text-foreground italic">Not set</p>
                                     )}
@@ -432,12 +457,22 @@ export default function SettingsPage() {
                                         <Checkbox checked={user?.notificationEmails?.includes(user.email) ?? true} disabled />
                                         <span className="text-sm text-foreground">{user?.email} <span className="text-muted-foreground text-xs">(Primary)</span></span>
                                     </div>
-                                    {user?.secondaryEmails?.map((email, i) => (
-                                        <div key={i} className="flex items-center gap-2">
-                                            <Checkbox checked={user?.notificationEmails?.includes(email) ?? false} disabled />
-                                            <span className="text-sm text-foreground">{email}</span>
-                                        </div>
-                                    ))}
+                                    {user?.secondaryEmails?.map((email, i) => {
+                                        const isVerified = user?.verifiedSecondaryEmails?.includes(email) ?? false;
+                                        return (
+                                            <div key={i} className="flex items-center gap-2">
+                                                <Checkbox checked={user?.notificationEmails?.includes(email) ?? false} disabled />
+                                                <span className="text-sm text-foreground flex items-center gap-1.5">
+                                                    {email}
+                                                    {isVerified ? (
+                                                        <BadgeCheck className="h-3.5 w-3.5 text-blue-500 fill-blue-500/10 flex-shrink-0" />
+                                                    ) : (
+                                                        <span className="text-xs text-amber-500">(Pending verification)</span>
+                                                    )}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
                                     {(!user?.secondaryEmails || user.secondaryEmails.length === 0) && (
                                         <p className="text-xs text-muted-foreground italic">No secondary emails added.</p>
                                     )}

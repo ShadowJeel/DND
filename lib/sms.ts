@@ -132,3 +132,17 @@ export async function notifySellerOfInquiryClosedSMS(to: string, inquiryId: stri
         recipients: [{ mobiles: to, inquiryId }] // Maps to {#inquiryId#} in template
     })
 }
+
+export async function notifyBuyerOfInquiryDeletedSMS(to: string, inquiryId: string) {
+    return sendSMS({
+        template_id: process.env.MSG91_TEMPLATE_INQUIRY_CLOSED || "SIMULATED",
+        recipients: [{ mobiles: to, inquiryId }]
+    })
+}
+
+export async function notifySellerOfInquiryDeletedSMS(to: string, inquiryId: string) {
+    return sendSMS({
+        template_id: process.env.MSG91_TEMPLATE_INQUIRY_CLOSED || "SIMULATED",
+        recipients: [{ mobiles: to, inquiryId }]
+    })
+}

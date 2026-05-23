@@ -1,0 +1,36 @@
+[2026-05-23T06:07:23.405Z] INFO Server signed in successfully as buyer {"email":"[redacted-email]"}
+[2026-05-23T06:07:23.972Z] INFO Sending inquiry receipt emails to buyer {"buyerId":"BUY-0001","inquiryId":"INQ-0011","targetEmails":["[redacted-email]","[redacted-email]"]}
+[2026-05-23T06:07:27.035Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-23T06:07:27.171Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-23T06:07:27.291Z] WARN MSG91_AUTH_KEY not configured. Simulating SMS send. {"payload":{"template_id":"SIMULATED","recipients":[{"mobiles":"+****1006"}]}}
+[2026-05-23T06:07:27.290Z] INFO New inquiry created, sending targeted notifications {"inquiryId":"INQ-0011","categories":["HR Plates or Coils"],"targetedSellerCount":1}
+[2026-05-23T06:07:29.835Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-23T06:07:29.836Z] INFO New inquiry notifications complete
+[2026-05-23T06:08:05.059Z] WARN MSG91_AUTH_KEY not configured. Simulating SMS send. {"payload":{"template_id":"SIMULATED","recipients":[{"mobiles":"+****1006","inquiryId":"INQ-0011"}]}}
+[2026-05-23T06:08:05.058Z] INFO Bidding started, notifying matching sellers {"inquiryId":"INQ-0011","sellerCount":1}
+[2026-05-23T06:08:08.157Z] INFO Bidding started notifications sent
+[2026-05-23T06:08:08.156Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-23T06:09:17.731Z] INFO Server signed in successfully as buyer for disqualification {"email":"[redacted-email]"}
+[2026-05-23T06:09:21.181Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-23T06:09:21.182Z] WARN MSG91_AUTH_KEY not configured. Simulating SMS send. {"payload":{"template_id":"SIMULATED","recipients":[{"mobiles":"+****1006","offerId":"OFR-0003"}]}}
+[2026-05-23T06:21:03.186Z] WARN Failed to write to archive collection soft_deleted_inquiries, skipping {"error":"7 PERMISSION_DENIED: Missing or insufficient permissions."}
+[2026-05-23T06:25:48.717Z] INFO Server signed in successfully as buyer {"email":"[redacted-email]"}
+[2026-05-23T06:25:48.935Z] INFO Sending inquiry receipt emails to buyer {"buyerId":"BUY-0001","inquiryId":"INQ-0012","targetEmails":["[redacted-email]","[redacted-email]"]}
+[2026-05-23T06:25:51.701Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-23T06:25:51.904Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-23T06:25:51.942Z] INFO New inquiry created, sending targeted notifications {"inquiryId":"INQ-0012","categories":["HR Plates or Coils"],"targetedSellerCount":1}
+[2026-05-23T06:25:51.943Z] WARN MSG91_AUTH_KEY not configured. Simulating SMS send. {"payload":{"template_id":"SIMULATED","recipients":[{"mobiles":"+****1006"}]}}
+[2026-05-23T06:25:54.827Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-23T06:25:54.828Z] INFO New inquiry notifications complete
+[2026-05-23T06:26:30.722Z] WARN Failed to write to archive collection soft_deleted_inquiries, skipping {"error":"7 PERMISSION_DENIED: Missing or insufficient permissions."}
+[2026-05-23T06:26:33.482Z] WARN MSG91_AUTH_KEY not configured. Simulating SMS send. {"payload":{"template_id":"SIMULATED","recipients":[{"mobiles":"****8391","inquiryId":"INQ-0007"}]}}
+[2026-05-23T06:26:33.481Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-23T06:26:44.544Z] INFO Bidding started, notifying matching sellers {"inquiryId":"INQ-0012","sellerCount":1}
+[2026-05-23T06:26:44.545Z] WARN MSG91_AUTH_KEY not configured. Simulating SMS send. {"payload":{"template_id":"SIMULATED","recipients":[{"mobiles":"+****1006","inquiryId":"INQ-0012"}]}}
+[2026-05-23T06:26:47.943Z] INFO Bidding started notifications sent
+[2026-05-23T06:26:47.942Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-23T06:27:15.342Z] WARN Failed to write to archive collection soft_deleted_inquiries, skipping {"error":"7 PERMISSION_DENIED: Missing or insufficient permissions."}
+[2026-05-23T06:27:19.170Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}
+[2026-05-23T06:27:19.171Z] WARN MSG91_AUTH_KEY not configured. Simulating SMS send. {"payload":{"template_id":"SIMULATED","recipients":[{"mobiles":"****8391","inquiryId":"INQ-0012"}]}}
+[2026-05-23T06:27:19.284Z] WARN MSG91_AUTH_KEY not configured. Simulating SMS send. {"payload":{"template_id":"SIMULATED","recipients":[{"mobiles":"+****1006","inquiryId":"INQ-0012"}]}}
+[2026-05-23T06:27:22.560Z] INFO Email sent successfully via Google Workspace {"to":"[redacted-email]","messageId":"<[redacted-email]>"}

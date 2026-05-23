@@ -1,5 +1,5 @@
 import { logger } from "@/lib/logger"
-import { acceptOffer, closeInquiry, createOffer, disqualifyOffer, getInquiryById, getOfferById, getOffersByInquiryId, getOffersBySellerId, getUserById } from "@/lib/store"
+import { acceptOffer, closeInquiry, createOffer, disqualifyOffer, getInquiryById, getOfferById, getOffersByInquiryId, getOffersBySellerId, getUserById, getVerifiedNotificationEmails } from "@/lib/store"
 import { notifyBuyerOfAcceptanceEmail, notifyBuyerOfNewOfferEmail, notifySellerOfAcceptanceEmail, notifySellerOfRejectionEmail } from "@/lib/email"
 import { notifyBuyerOfAcceptanceSMS, notifyBuyerOfNewOfferSMS, notifySellerOfAcceptanceSMS, notifySellerOfRejectionSMS } from "@/lib/sms"
 import { NextResponse } from "next/server"
@@ -82,12 +82,17 @@ export async function POST(req: Request) {
 
       // Send Email if available
       if (buyer.email) {
+        const verifiedEmails = getVerifiedNotificationEmails(buyer)
+        const targetEmails = verifiedEmails.length > 0 ? verifiedEmails : [buyer.email]
         const allOffers = await getOffersByInquiryId(inquiryId);
         const offerCount = allOffers.length;
         const productName = inquiry.items[0]?.product || "Product";
-        await notifyBuyerOfNewOfferEmail(buyer.email, inquiryId, productName, offerCount).catch(e =>
-          logger.error("Failed to send Email notification for new offer", { error: e.message })
+        const emailPromises = targetEmails.map((email: string) =>
+          notifyBuyerOfNewOfferEmail(email, inquiryId, productName, offerCount).catch(e =>
+            logger.error("Failed to send Email notification for new offer", { email, error: e.message })
+          )
         )
+        await Promise.allSettled(emailPromises)
       }
 
       // Send SMS if available
@@ -139,7 +144,14 @@ export async function PATCH(req: Request) {
           const inquiry = await getInquiryById(offer.inquiryId)
           const productName = inquiry?.items[0]?.product || "Product";
           if (seller) {
-            if (seller.email) await notifySellerOfRejectionEmail(seller.email, offer.id, offer.inquiryId, productName).catch(e => logger.error("Failed rejection email", { error: (e as Error).message }))
+            const verifiedEmails = getVerifiedNotificationEmails(seller)
+            const targetEmails = verifiedEmails.length > 0 ? verifiedEmails : [seller.email]
+            const emailPromises = targetEmails.map((email: string) =>
+              notifySellerOfRejectionEmail(email, offer.id, offer.inquiryId, productName).catch(e => 
+                logger.error("Failed rejection email", { email, error: (e as Error).message })
+              )
+            )
+            await Promise.allSettled(emailPromises)
             if (seller.phone) await notifySellerOfRejectionSMS(seller.phone, offer.id).catch(e => logger.error("Failed rejection SMS", { error: (e as Error).message }))
           }
         }
@@ -210,13 +222,8 @@ export async function PATCH(req: Request) {
             phone: buyer.phone || ""
           }
 
-          const sellerTargetEmails = seller.notificationEmails && seller.notificationEmails.length > 0
-            ? seller.notificationEmails
-            : ([seller.email].filter(Boolean) as string[])
-
-          const buyerTargetEmails = buyer.notificationEmails && buyer.notificationEmails.length > 0
-            ? buyer.notificationEmails
-            : ([buyer.email].filter(Boolean) as string[])
+          const sellerTargetEmails = getVerifiedNotificationEmails(seller)
+          const buyerTargetEmails = getVerifiedNotificationEmails(buyer)
 
           // Send notification to seller
           logger.info("Notifying seller emails", { sellerId: seller.id, sellerTargetEmails })

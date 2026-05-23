@@ -2,7 +2,7 @@ import { logger } from "@/lib/logger"
 import { createInquiry, getAllSellerPhones, getInquiriesByBuyerId, getOpenInquiries, getSellersContactInfoByCategories, getInquiryById } from "@/lib/store"
 import { notifySellerOfNewInquiryEmail, notifySellersOfBiddingEmail, sendInquirySubmissionReceiptEmail } from "@/lib/email"
 import { notifySellerOfNewInquirySMS, notifySellersOfBiddingSMS } from "@/lib/sms"
-import { getUserById } from "@/lib/store"
+import { getUserById, getVerifiedNotificationEmails } from "@/lib/store"
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/firebase"
 import { signInWithEmailAndPassword } from "firebase/auth"
@@ -61,9 +61,8 @@ export async function POST(req: Request) {
           // ensure buyerName is populated
           inquiry.buyerName = buyer.name || inquiry.buyerName || buyerName || "Buyer"
           
-          const targetEmails = buyer.notificationEmails && buyer.notificationEmails.length > 0
-            ? buyer.notificationEmails
-            : [buyer.email]
+          const verifiedEmails = getVerifiedNotificationEmails(buyer)
+          const targetEmails = verifiedEmails.length > 0 ? verifiedEmails : [buyer.email]
           
           logger.info("Sending inquiry receipt emails to buyer", {
             buyerId,
@@ -111,12 +110,17 @@ export async function POST(req: Request) {
         // Send notifications in parallel
         const promises = sellerContacts.map((contact: any) => {
           const tasks = [];
+          const targetEmails = contact.emails || [contact.email];
           if (biddingDuration) {
             if (contact.phone) tasks.push(notifySellersOfBiddingSMS(contact.phone, inquiryId).catch(() => false));
-            if (contact.email) tasks.push(notifySellersOfBiddingEmail(contact.email, inquiryId, productName).catch(() => false));
+            targetEmails.forEach((email: string) => {
+              if (email) tasks.push(notifySellersOfBiddingEmail(email, inquiryId, productName).catch(() => false));
+            });
           } else {
             if (contact.phone) tasks.push(notifySellerOfNewInquirySMS(contact.phone).catch(() => false));
-            if (contact.email) tasks.push(notifySellerOfNewInquiryEmail(contact.email, inquiryId, productName).catch(() => false));
+            targetEmails.forEach((email: string) => {
+              if (email) tasks.push(notifySellerOfNewInquiryEmail(email, inquiryId, productName).catch(() => false));
+            });
           }
           return Promise.allSettled(tasks);
         }).flat()

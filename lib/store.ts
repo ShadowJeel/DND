@@ -33,6 +33,7 @@ export interface User {
   smsNotificationsEnabled: boolean
   secondaryEmails?: string[]
   notificationEmails?: string[]
+  verifiedSecondaryEmails?: string[]
 }
 
 export interface InquiryItem {
@@ -111,6 +112,7 @@ function mapBuyerFromDb(row: any, id: string): User {
     smsNotificationsEnabled: row.sms_notifications_enabled !== false, // default to true
     secondaryEmails: row.secondary_emails || [],
     notificationEmails: (row.notification_emails && row.notification_emails.length > 0) ? row.notification_emails : [row.email],
+    verifiedSecondaryEmails: row.verified_secondary_emails || [],
   }
 }
 
@@ -148,7 +150,30 @@ function mapSellerFromDb(row: any, id: string): User {
     smsNotificationsEnabled: row.sms_notifications_enabled !== false, // default to true
     secondaryEmails: row.secondary_emails || [],
     notificationEmails: (row.notification_emails && row.notification_emails.length > 0) ? row.notification_emails : [row.email],
+    verifiedSecondaryEmails: row.verified_secondary_emails || [],
   }
+}
+
+/**
+ * Helper to get all verified notification emails for a buyer/seller.
+ * The primary email is always considered verified.
+ * Secondary emails are included only if they are present in notificationEmails
+ * AND present in verifiedSecondaryEmails.
+ */
+export function getVerifiedNotificationEmails(user: User): string[] {
+  if (!user) return []
+  const primary = user.email
+  const secondaries = user.secondaryEmails || []
+  const verifiedSecondaries = user.verifiedSecondaryEmails || []
+  const preferences = user.notificationEmails || [primary]
+
+  return preferences.filter(email => {
+    if (!email) return false
+    const isPrimary = email.toLowerCase() === primary.toLowerCase()
+    const isVerifiedSecondary = secondaries.some(s => s.toLowerCase() === email.toLowerCase()) && 
+                               verifiedSecondaries.some(vs => vs.toLowerCase() === email.toLowerCase())
+    return isPrimary || isVerifiedSecondary
+  })
 }
 
 async function mapInquiryFromDb(row: any, id: string): Promise<Inquiry> {
@@ -709,13 +734,17 @@ export async function softDeleteInquiry(inquiryId: string, userId: string): Prom
 
   const user = await getUserById(userId)
 
-  await setDoc(doc(db, "soft_deleted_inquiries", inquiryId), {
-    ...inqData,
-    deleted_by_user_id: user?.id || userId,
-    deleted_by_user_name: user?.name || "Unknown",
-    deleted_by_user_email: user?.email || "Unknown",
-    deleted_at: new Date().toISOString()
-  });
+  try {
+    await setDoc(doc(db, "soft_deleted_inquiries", inquiryId), {
+      ...inqData,
+      deleted_by_user_id: user?.id || userId,
+      deleted_by_user_name: user?.name || "Unknown",
+      deleted_by_user_email: user?.email || "Unknown",
+      deleted_at: new Date().toISOString()
+    });
+  } catch (archiveError: any) {
+    logger.warn("Failed to write to archive collection soft_deleted_inquiries, skipping", { error: archiveError.message })
+  }
 
   await updateDoc(inqDoc.ref, { status: "deleted" })
 }
@@ -731,20 +760,28 @@ export async function reopenInquiry(inquiryId: string): Promise<void> {
   }
 }
 
-export async function getSellerContactInfoFromOffers(inquiryId: string): Promise<{phone: string, email: string}[]> {
+export async function getSellerContactInfoFromOffers(inquiryId: string): Promise<{phone: string, email: string, emails?: string[]}[]> {
   const q = query(collection(db, "offers"), where("inquiry_id", "==", inquiryId))
   const snap = await getDocs(q)
   if (snap.empty) return []
 
   const sellerIds = [...new Set(snap.docs.map(d => d.data().seller_id))]
 
-  const contacts: {phone: string, email: string}[] = []
+  const contacts: {phone: string, email: string, emails?: string[]}[] = []
   const chunkSize = 10;
   for (let i = 0; i < sellerIds.length; i += chunkSize) {
     const chunk = sellerIds.slice(i, i + chunkSize);
     const sq = query(collection(db, "sellers"), where("id", "in", chunk))
     const sSnap = await getDocs(sq)
-    contacts.push(...sSnap.docs.map(d => ({ phone: d.data().phone, email: d.data().email })))
+    contacts.push(...sSnap.docs.map(d => {
+      const seller = mapSellerFromDb(d.data(), d.id)
+      const emails = getVerifiedNotificationEmails(seller)
+      return { 
+        phone: seller.phone, 
+        email: seller.email,
+        emails: emails.length > 0 ? emails : [seller.email]
+      }
+    }))
   }
   return contacts;
 }
@@ -755,7 +792,7 @@ export async function getAllSellerPhones(): Promise<string[]> {
   return snap.docs.map(d => d.data().phone).filter(p => !!p)
 }
 
-export async function getSellersContactInfoByCategories(categories: string[]): Promise<{phone: string, email: string}[]> {
+export async function getSellersContactInfoByCategories(categories: string[]): Promise<{phone: string, email: string, emails?: string[]}[]> {
   if (!categories || categories.length === 0) return []
 
   // We fetch all verified sellers and filter in memory since firestore array-contains-any 
@@ -765,13 +802,20 @@ export async function getSellersContactInfoByCategories(categories: string[]): P
   const snap = await getDocs(q)
 
   return snap.docs
-    .map(d => d.data())
+    .map(d => mapSellerFromDb(d.data(), d.id))
     .filter(seller => {
       const sellerCategories: string[] = seller.categories || []
       // Check if there is any intersection between seller categories and required categories
       return sellerCategories.some(c => categories.includes(c))
     })
-    .map(seller => ({ phone: seller.phone, email: seller.email }))
+    .map(seller => {
+      const emails = getVerifiedNotificationEmails(seller)
+      return { 
+        phone: seller.phone, 
+        email: seller.email,
+        emails: emails.length > 0 ? emails : [seller.email]
+      }
+    })
     .filter(contact => !!contact.phone || !!contact.email)
 }
 
@@ -1292,6 +1336,7 @@ export interface UpdateUserData {
   smsNotificationsEnabled?: boolean
   secondaryEmails?: string[]
   notificationEmails?: string[]
+  verifiedSecondaryEmails?: string[]
 }
 
 export async function updateUser(userId: string, updates: UpdateUserData): Promise<User | null> {
@@ -1308,6 +1353,7 @@ export async function updateUser(userId: string, updates: UpdateUserData): Promi
   if (updates.smsNotificationsEnabled !== undefined) updateData.sms_notifications_enabled = updates.smsNotificationsEnabled
   if (updates.secondaryEmails !== undefined) updateData.secondary_emails = updates.secondaryEmails
   if (updates.notificationEmails !== undefined) updateData.notification_emails = updates.notificationEmails
+  if (updates.verifiedSecondaryEmails !== undefined) updateData.verified_secondary_emails = updates.verifiedSecondaryEmails
 
   try {
     if (userId.startsWith("BUY-")) {
